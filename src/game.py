@@ -21,6 +21,7 @@ class Tile:
         "Fields": Resource("Grain"),
         "Pasture": Resource("Wool")
     }
+    
     def __init__(self, terrain, number, neighbours):
         self.terrain = terrain
         self.number = number
