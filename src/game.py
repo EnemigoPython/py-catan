@@ -1,4 +1,4 @@
-from typing import List, Dict, Self
+from typing import List, Dict, TypeVar
 
 class InvalidResourceException(Exception):
     """Custom error handler for creation of unidentified resource"""
@@ -15,6 +15,7 @@ class Resource:
 
 class Tile:
     """A single tile on the Catan game board"""
+    Self = TypeVar("Self", bound="Tile")
     resource_dict: Dict[str, Resource | None] = {
         "Desert": None,
         "Hills": Resource("Brick"),
