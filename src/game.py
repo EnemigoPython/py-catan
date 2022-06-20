@@ -15,7 +15,9 @@ class Resource:
 
 class Tile:
     """A single tile on the Catan game board"""
+
     Self = TypeVar("Self", bound="Tile")
+    
     resource_dict: Dict[str, Resource | None] = {
         "Desert": None,
         "Hills": Resource("Brick"),
