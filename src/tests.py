@@ -10,7 +10,7 @@ class TestClass:
         road = game.Construction("Road")
         assert str(road) == "Road"
         try:
-            _invalid = game.Construction("Invalid")
+            game.Construction("Invalid")
             raise Exception("This should not be ok")
         except AssertionError:
             pass
