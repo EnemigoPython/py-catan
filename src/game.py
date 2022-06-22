@@ -65,3 +65,6 @@ class Construction:
     def __init__(self, name: str):
         assert name in self.construction_dict.keys()
         self.name = name
+
+    def __repr__(self):
+        return self.name
