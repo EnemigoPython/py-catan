@@ -2,6 +2,7 @@ from enum import Enum, auto
 from typing import List, Dict, TypeVar
 
 class Resource(Enum):
+    """Used by players to build construction items"""
     Brick = auto()
     Lumber = auto()
     Ore = auto()
@@ -31,9 +32,7 @@ class Tile:
         self.road_slots: List[Construction]
 
     def check_proc(self, number: int):
-        if self.number == number:
-            return self.resource
-        return None
+        return self.resource if number == self.number else None
 
 class Construction:
     """An item constructed by a player"""
