@@ -37,11 +37,31 @@ class Tile:
 class Construction:
     """An item constructed by a player"""
 
-    # construction_dict = {
-    #     "Road": [
-    #         Tile.resource_dict 
-    #     ]
-    # }
+    construction_dict = {
+        "Road": [
+            Resource.Brick,
+            Resource.Lumber
+        ],
+        "Settlement": [
+            Resource.Brick,
+            Resource.Lumber,
+            Resource.Wool,
+            Resource.Grain
+        ],
+        "City": [
+            Resource.Ore,
+            Resource.Ore,
+            Resource.Ore,
+            Resource.Grain,
+            Resource.Grain
+        ],
+        "Development Card": [
+            Resource.Ore,
+            Resource.Wool,
+            Resource.Grain
+        ]
+    }
 
-    # def __init__(self, name: str):
-    #     if name in ("Road", "Settlement")
+    def __init__(self, name: str):
+        assert name in self.construction_dict.keys()
+        self.name = name
