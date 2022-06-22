@@ -29,7 +29,7 @@ class Tile:
         self.neighbours = neighbours
         self.resource = self.resource_dict[self.terrain]
         self.construction_slots: List[Construction]
-        self.road_slots: List[Construction]
+        self.road_slots: List[Road]
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
@@ -62,9 +62,18 @@ class Construction:
         ]
     }
 
+    @staticmethod
+    def can_build(name):
+        return name in Construction.construction_dict.keys()
+
     def __init__(self, name: str):
         assert name in self.construction_dict.keys()
         self.name = name
 
     def __repr__(self):
         return self.name
+
+class Road(Construction):
+    """A road to put your wagon on"""
+
+# print(Construction.can_build("x"))
