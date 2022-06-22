@@ -1,7 +1,12 @@
+from enum import Enum, auto
 from typing import List, Dict, TypeVar
 
-class InvalidResourceException(Exception):
-    """Custom error handler for creation of unidentified resource"""
+class Resource(Enum):
+    Brick = auto()
+    Lumber = auto()
+    Ore = auto()
+    Grain = auto()
+    Wool = auto()
 
 class Tile:
     """A single tile on the Catan game board"""
@@ -10,11 +15,11 @@ class Tile:
     
     resource_dict: Dict[str, str | None] = {
         "Desert": None,
-        "Hills": "Brick",
-        "Forest": "Lumber",
-        "Mountains": "Ore",
-        "Fields": "Grain",
-        "Pasture": "Wool"
+        "Hills": Resource.Brick,
+        "Forest": Resource.Lumber,
+        "Mountains": Resource.Ore,
+        "Fields": Resource.Grain,
+        "Pasture": Resource.Wool
     }
 
     def __init__(self, terrain: str, number: int, neighbours: List[Self]):
