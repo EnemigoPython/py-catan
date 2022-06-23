@@ -9,6 +9,12 @@ class Resource(Enum):
     Grain = auto()
     Wool = auto()
 
+class Player:
+    """A player of the game of Catan"""
+
+    def __init__(self):
+        self.resources: List[Resource] = []
+
 class Tile:
     """A single tile on the Catan game board"""
 
@@ -38,33 +44,30 @@ class Construction:
     """An item constructed by a player"""
 
     construction_dict = {
-        "Road": [
-            Resource.Brick,
-            Resource.Lumber
-        ],
-        "Settlement": [
-            Resource.Brick,
-            Resource.Lumber,
-            Resource.Wool,
-            Resource.Grain
-        ],
-        "City": [
-            Resource.Ore,
-            Resource.Ore,
-            Resource.Ore,
-            Resource.Grain,
-            Resource.Grain
-        ],
-        "Development Card": [
-            Resource.Ore,
-            Resource.Wool,
-            Resource.Grain
-        ]
+        "Road": {
+            Resource.Brick: 1,
+            Resource.Lumber: 1
+        },
+        "Settlement": {
+            Resource.Brick: 1,
+            Resource.Lumber: 1,
+            Resource.Wool: 1,
+            Resource.Grain: 1
+        },
+        "City": {
+            Resource.Ore: 3,
+            Resource.Grain: 2
+        },
+        "Development Card": {
+            Resource.Ore: 1,
+            Resource.Wool: 1,
+            Resource.Grain: 1
+        }
     }
 
     @staticmethod
-    def can_build(name):
-        return name in Construction.construction_dict.keys()
+    def can_build(item: str, player: Player):
+        return all(player.resources.count(key) >= val for key, val in Construction.construction_dict[item].items())
 
     def __init__(self, name: str):
         assert name in self.construction_dict.keys()
@@ -76,4 +79,6 @@ class Construction:
 class Road(Construction):
     """A road to put your wagon on"""
 
-# print(Construction.can_build("x"))
+    def __init__(self):
+        super().__init__("Road")
+
