@@ -31,3 +31,4 @@ class TestClass:
         assert game.Construction.can_build("City", player)
         player.resources.pop()
         assert not game.Construction.can_build("City", player)
+        assert not game.Construction.can_build("Development Card", player)

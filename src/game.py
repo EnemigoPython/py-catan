@@ -14,6 +14,11 @@ class Player:
 
     def __init__(self):
         self.resources: List[Resource] = []
+        self.development_cards: List[DevelopmentCard] = []
+
+class Harbour:
+    """A trading port that can be used for better deals"""
+    pass
 
 class Tile:
     """A single tile on the Catan game board"""
@@ -34,8 +39,9 @@ class Tile:
         self.number = number
         self.neighbours = neighbours
         self.resource = self.resource_dict[self.terrain]
-        self.construction_slots: List[Construction]
-        self.road_slots: List[Road]
+        self.construction_slots: List[Construction] = []
+        self.road_slots: List[Road] = []
+        self.harbour_slot: Harbour | None = None
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
@@ -82,3 +88,5 @@ class Road(Construction):
     def __init__(self):
         super().__init__("Road")
 
+class DevelopmentCard(Construction):
+    """Mystery card to give players an edge"""
