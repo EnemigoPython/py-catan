@@ -1,6 +1,6 @@
 """This file contains all game logic components as a library"""
 from enum import Enum, auto
-from typing import List, Set, Dict, TypeVar, Union
+from typing import List, Set, Dict, TypeVar
 
 class Resource(Enum):
     """Used by players to build construction items"""
@@ -17,8 +17,13 @@ class Player:
         self.name = name
         self.resources: List[Resource] = []
         self.development_cards: List[DevelopmentCard] = []
+        self.occupied_tiles: Set[Tile] = set()
         self.controlled_tiles: Set[Tile] = set()
         self.victory_points = 0
+
+    @property
+    def controlled_tiles(self):
+        pass
 
     @property
     def constructions(self):
@@ -27,11 +32,14 @@ class Player:
 
     @property
     def roads(self):
-        return [item for tile in self.controlled_tiles for item in tile.road_slots 
+        return [item for tile in self.occupied_tiles for item in tile.road_slots 
             if item is not None and item.owner is self]
 
     def __repr__(self):
         return self.name
+
+    def build(self, item):
+        assert Construction.can_build(self, item)
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -51,14 +59,22 @@ class Tile:
         "Pasture": Resource.Wool
     }
 
-    def __init__(self, terrain: str, number: int, neighbours: List[Self]=[], harbour=None):
+    def __init__(self, terrain: str, number: int, neighbours: List[Self | None]=[None for _ in range(6)], harbour=None):
         self.terrain = terrain
         self.number = number
+        assert len(neighbours) <= 6
         self.neighbours = neighbours
         self.resource = self.resource_dict[self.terrain]
-        self.construction_slots: List[Union[Construction, None]] = [None for _ in range(6)]
-        self.road_slots: List[Union[Road, None]] = [None for _ in range(6)]
-        self.harbour_slot: Union[Harbour, None] = harbour
+        self.construction_slots: List[Construction | None] = [None for _ in range(6)]
+        self.road_slots: List[Road | None] = [None for _ in range(6)]
+        self.harbour_slot: Harbour | None = harbour
+
+    def edge_neighbours(self, edge_idx: int):
+        """Determine, given a single edge on the tile, what other tiles intersect with the edge"""
+        if edge_idx == 0:
+            return [n for n in self.neighbours[6:0:-4] if n is not None]
+        return [n for n in self.neighbours[edge_idx-1:edge_idx+1] if n is not None]
+
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
@@ -89,7 +105,7 @@ class Construction:
     }
 
     @staticmethod
-    def can_build(item: str, player: Player):
+    def can_build(player: Player, item: str):
         return all(player.resources.count(key) >= val for key, val in Construction.construction_dict[item].items())
 
     def __init__(self, name: str, owner: Player):
@@ -114,10 +130,12 @@ class SettlementOrCity(Construction):
 
     def __init__(self, owner: Player, tile: Tile, slot_idx: int):
         assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
-        self.tile = tile
-        self.tile.construction_slots[slot_idx] = self
+        self.tiles = [tile] + tile.edge_neighbours
+        for e, tile in enumerate(self.tiles):
+            idx = slot_idx + ((e * 2) % 6) # edges are returned clockwise; neighbour idx is + 2 each time
+            tile.construction_slots[idx] = self
+            self.owner.controlled_tiles.add(tile)
         super().__init__("Settlement", owner)
-        self.owner.controlled_tiles.add(tile)
         self.owner.victory_points += 1
 
     def upgrade_to_city(self):
@@ -130,4 +148,13 @@ class DevelopmentCard(Construction):
     def __init__(self, owner: Player):
         super().__init__("Development Card", owner)
 
-player1 = Player(name="Alice")
+
+# 0: 2/4
+# 1: 3/5
+# 2: 4/0
+# 3: 5/1
+# 4: 0/2
+# 5: 1/3
+
+print((5 + 2) % 6)
+print(0 % 6)
