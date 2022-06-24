@@ -2,15 +2,15 @@ import game
 
 class TestClass:
     def test_resources(self):
-        tile = game.Tile("Hills", 3, [])
+        tile = game.Tile("Hills", 3)
         assert tile.check_proc(5) is None
         assert tile.check_proc(3) is game.Resource.Brick
 
     def test_construction(self):
-        road = game.Construction("Road")
-        assert str(road) == "Road"
+        road = game.Construction("Road", owner=game.Player())
+        assert str(road) == "Default's Road"
         try:
-            game.Construction("Invalid")
+            game.Construction("Invalid", owner=game.Player())
             raise Exception("This should not be ok")
         except AssertionError:
             pass
@@ -32,3 +32,32 @@ class TestClass:
         player.resources.pop()
         assert not game.Construction.can_build("City", player)
         assert not game.Construction.can_build("Development Card", player)
+
+    def test_construction_slot(self):
+        tile = game.Tile("Hills", 3)
+        settlement1 = game.SettlementOrCity(game.Player(), tile, 0)
+        assert tile.construction_slots[0] is settlement1
+        assert tile.construction_slots[1] is None
+        settlement2 = game.SettlementOrCity(game.Player(), tile, 1)
+        assert tile.construction_slots[1] is settlement2
+        try:
+            _ = game.SettlementOrCity(game.Player(), tile, 1)
+            Exception("Not allowed to build on a used slot")
+        except AssertionError:
+            pass
+        try:
+            _ = game.SettlementOrCity(game.Player(), tile, 6)
+            Exception("Also not allowed to build on invalid index")
+        except AssertionError:
+            pass
+
+
+    def test_player_controlled_construction(self):
+        player1 = game.Player(name="Alice")
+        player2 = game.Player(name="Bob")
+        tile = game.Tile("Hills", 3)
+        settlement1 = game.SettlementOrCity(player1, tile, 0)
+        assert len(player1.constructions) == 0
+        # _ = game.SettlementOrCity(player2, tile, 1)
+        # _ = game.SettlementOrCity(player1, tile, 2)
+        # player1.controlled_tiles.append(tile)

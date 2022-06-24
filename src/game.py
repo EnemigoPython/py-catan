@@ -12,7 +12,8 @@ class Resource(Enum):
 class Player:
     """A player of the game of Catan"""
 
-    def __init__(self):
+    def __init__(self, name="Default"):
+        self.name = name
         self.resources: List[Resource] = []
         self.development_cards: List[DevelopmentCard] = []
         self.controlled_tiles: List[Tile] = []
@@ -20,7 +21,11 @@ class Player:
 
     @property
     def constructions(self):
-        return [item for tile in self.controlled_tiles for item in tile.construction_slots if item.owner is self]
+        return [item for tile in self.controlled_tiles for item in tile.construction_slots 
+            if item is not None and item.owner is self]
+
+    def __repr__(self):
+        return self.name
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -45,8 +50,8 @@ class Tile:
         self.number = number
         self.neighbours = neighbours
         self.resource = self.resource_dict[self.terrain]
-        self.construction_slots: List[Construction] = []
-        self.road_slots: List[Road] = []
+        self.construction_slots: List[Union[Construction, None]] = [None for _ in range(6)]
+        self.road_slots: List[Union[Road, None]] = [None for _ in range(6)]
         self.harbour_slot: Union[Harbour, None] = None
 
     def check_proc(self, number: int):
@@ -87,23 +92,26 @@ class Construction:
         self.owner = owner
 
     def __repr__(self):
-        return self.name
+        return f"{self.owner}'s {self.name}"
 
 class Road(Construction):
     """A road to put your wagon on"""
 
-    def __init__(self, owner: Player, tile: Tile):
+    def __init__(self, owner: Player, tile: Tile, slot_idx: int):
+        assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
         self.tile = tile
-        self.tile.road_slots.append(self)
+        self.tile.road_slots[slot_idx] = self
         super().__init__("Road", owner)
 
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
 
-    def __init__(self, owner: Player, tile: Tile):
+    def __init__(self, owner: Player, tile: Tile, slot_idx: int):
+        assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
         self.tile = tile
-        self.tile.construction_slots.append(self)
+        self.tile.construction_slots[slot_idx] = self
         super().__init__("Settlement", owner)
+        self.owner.victory_points += 1
 
     def upgrade_to_city(self):
         self.name = "City"
@@ -114,13 +122,3 @@ class DevelopmentCard(Construction):
 
     def __init__(self, owner: Player):
         super().__init__("Development Card", owner)
-
-
-player = Player()
-player2 = Player()
-tile = Tile("Hills", 3)
-settlement = SettlementOrCity(player, tile)
-settlement2 = SettlementOrCity(player2, tile)
-settlement3 = SettlementOrCity(player, tile)
-player.controlled_tiles.append(tile)
-print(player.constructions)
