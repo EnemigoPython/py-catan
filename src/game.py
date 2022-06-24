@@ -75,11 +75,11 @@ class Tile:
     def __repr__(self):
         return self.terrain
 
-    def edge_neighbours(self, edge_idx: int):
-        """Determine, given a single edge on the tile, what other tiles intersect with the edge"""
-        if edge_idx == 0:
+    def vertex_neighbour(self, vertex_idx: int):
+        """Determine, given a vertex of the tile, what other tiles are intersected"""
+        if vertex_idx == 0:
             return self.neighbours[6:0:-4]
-        return self.neighbours[edge_idx-1:edge_idx+1]
+        return self.neighbours[vertex_idx-1:vertex_idx+1]
 
 
     def check_proc(self, number: int):
@@ -198,13 +198,13 @@ class SettlementOrCity(Construction):
 
     def __init__(self, owner: Player, tile: Tile, slot_idx: int):
         assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
-        self.tiles = [tile] + tile.edge_neighbours(slot_idx)
+        self.tiles = [tile] + tile.vertex_neighbour(slot_idx)
         for e, tile in enumerate(self.tiles):
-            # None is left in the loop so that 
+            # None is left in the loop so that the idx is calculated correctly
             if tile is None: continue
-            idx = (slot_idx + (e * 2)) % 6  # edges are returned clockwise; neighbour idx is + 2 each time
+            idx = (slot_idx + (e * 2)) % 6  # vertices are returned clockwise; neighbour idx is + 2 each time
             tile.construction_slots[idx] = self
-        self.tiles = [tile for tile in self.tiles if tile is not None]
+        self.tiles: List[Tile] = [tile for tile in self.tiles if tile is not None] # once the loop has completed eliminate NoneTypes
         super().__init__("Settlement", owner)
         self.owner.occupied_tiles.update(self.tiles)
         self.owner.victory_points += 1

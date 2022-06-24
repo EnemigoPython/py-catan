@@ -92,3 +92,15 @@ class TestClass:
         board = game.Tile.create_board()
         player = game.Player("Alice")
         settlement = game.SettlementOrCity(player, board[0][0], 2)
+        assert len(settlement.tiles) == 3
+        assert all(tile in settlement.tiles for tile in (board[0][0], board[0][1], board[1][1]))
+        assert board[0][1].construction_slots[4] is settlement
+        assert board[1][1].construction_slots[0] is settlement
+        settlement2 = game.SettlementOrCity(player, board[2][0], 4)
+        assert len(settlement2.tiles) == 1
+        assert settlement2.tiles[0] is board[2][0]
+        settlement3 = game.SettlementOrCity(player, board[2][0], 0)
+        assert len(settlement3.tiles) == 2
+        print([(i, i.construction_slots) for i in settlement3.tiles])
+        print(board[1][0] is settlement3.tiles[0])
+        assert board[1][0].construction_slots[4] is settlement3
