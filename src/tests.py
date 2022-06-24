@@ -69,7 +69,24 @@ class TestClass:
         _ = game.Road(player1, tile, 0)
         assert len(player1.roads) == 1
 
-    def test_connected_tile_construction(self):
-        connected_tiles = [
-            game.Tile("Desert", 0)
-        ]
+    def test_create_board(self):
+        board = game.Tile.create_board()
+        assert len(board) == 5
+        assert sum(len(l) for l in board) == 19
+        assert str(board[0][0]) == "Mountains"
+        assert board[0][0].neighbours == [None, board[0][1], board[1][1], board[1][0], None, None]
+        assert board[0][0].neighbours[1].neighbours[4] == board[0][0]
+        assert board[0][1].neighbours == [None, board[0][2], board[1][2], board[1][1], board[0][0], None]
+        assert [str(i) for i in board[1][3].neighbours] == ["None", "None", "Mountains", "Forest", "Pasture", "Forest"]
+        assert [str(i) for i in board[1][1].neighbours] == ["Pasture", "Pasture", "Desert", "Forest", "Fields", "Mountains"]
+        assert [i.number for i in board[2][2].neighbours] == [4, 3, 4, 3, 11, 6]
+        assert [str(i) for i in board[3][0].neighbours] == ["Forest", "Mountains", "Hills", "None", "None", "Fields"]
+        assert [i.number for i in board[3][2].neighbours] == [3, 5, 11, 6, 3, 0]
+        assert [str(i) for i in board[3][3].neighbours] == ["Mountains", "None", "None", "Pasture", "Fields", "Forest"]
+        assert [str(i) for i in board[3][3].neighbours] == ["Mountains", "None", "None", "Pasture", "Fields", "Forest"]
+        assert [str(i) for i in board[4][0].neighbours] == ["Mountains", "Fields", "None", "None", "None", "Forest"]
+        assert [str(i) for i in board[4][2].neighbours] == ["Pasture", "None", "None", "None", "Fields", "Fields"]
+
+    def test_board_construction_multiple_tiles(self):
+        player = game.Player("Alice")
+        
