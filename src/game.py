@@ -28,13 +28,15 @@ class Player:
 
     @property
     def constructions(self):
-        return [item for tile in self.controlled_tiles for item in tile.construction_slots 
-            if item is not None and item.owner is self]
+        """Find all constructions made by the player"""
+        # cast to a set to eliminate duplicate references, then back to a list for indexing
+        return list(set(item for tile in self.controlled_tiles for item in tile.construction_slots 
+            if item is not None and item.owner is self))
 
     @property
     def roads(self):
-        return [item for tile in self.occupied_tiles for item in tile.road_slots 
-            if item is not None and item.owner is self]
+        return list(set(item for tile in self.occupied_tiles for item in tile.road_slots 
+            if item is not None and item.owner is self))
 
     def __repr__(self):
         return self.name
@@ -76,8 +78,8 @@ class Tile:
     def edge_neighbours(self, edge_idx: int):
         """Determine, given a single edge on the tile, what other tiles intersect with the edge"""
         if edge_idx == 0:
-            return [n for n in self.neighbours[6:0:-4] if n is not None]
-        return [n for n in self.neighbours[edge_idx-1:edge_idx+1] if n is not None]
+            return self.neighbours[6:0:-4]
+        return self.neighbours[edge_idx-1:edge_idx+1]
 
 
     def check_proc(self, number: int):
@@ -198,8 +200,11 @@ class SettlementOrCity(Construction):
         assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
         self.tiles = [tile] + tile.edge_neighbours(slot_idx)
         for e, tile in enumerate(self.tiles):
-            idx = slot_idx + ((e * 2) % 6) # edges are returned clockwise; neighbour idx is + 2 each time
+            # None is left in the loop so that 
+            if tile is None: continue
+            idx = (slot_idx + (e * 2)) % 6  # edges are returned clockwise; neighbour idx is + 2 each time
             tile.construction_slots[idx] = self
+        self.tiles = [tile for tile in self.tiles if tile is not None]
         super().__init__("Settlement", owner)
         self.owner.occupied_tiles.update(self.tiles)
         self.owner.victory_points += 1
@@ -224,5 +229,4 @@ class DevelopmentCard(Construction):
 
 # print((5 + 2) % 6)
 # print(0 % 6)
-# print(Tile.create_board())
-Tile.create_board()
+board = Tile.create_board()

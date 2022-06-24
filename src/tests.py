@@ -59,6 +59,7 @@ class TestClass:
         player1 = game.Player(name="Alice")
         tile = game.Tile("Hills", 3)
         _ = game.SettlementOrCity(player1, tile, 0)
+        print(player1.occupied_tiles)
         assert len(player1.constructions) == 1
         _ = game.SettlementOrCity(player1, tile, 1)
         assert len(player1.constructions) == 2
@@ -88,5 +89,6 @@ class TestClass:
         assert [str(i) for i in board[4][2].neighbours] == ["Pasture", "None", "None", "None", "Fields", "Fields"]
 
     def test_board_construction_multiple_tiles(self):
+        board = game.Tile.create_board()
         player = game.Player("Alice")
-        
+        settlement = game.SettlementOrCity(player, board[0][0], 2)
