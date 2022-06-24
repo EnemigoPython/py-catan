@@ -60,11 +60,11 @@ class Tile:
         "Pasture": Resource.Wool
     }
 
-    def __init__(self, terrain: str, number: int, neighbours: List[Self | None]=[None for _ in range(6)], harbour=None):
+    def __init__(self, terrain: str, number: int, neighbours: List[Self | None]=None, harbour=None):
         self.terrain = terrain
         self.number = number
-        assert len(neighbours) <= 6
-        self.neighbours = neighbours
+        assert neighbours is None or len(neighbours) <= 6
+        self.neighbours = neighbours or [None for _ in range(6)]
         self.resource = self.resource_dict[self.terrain]
         self.construction_slots: List[Construction | None] = [None for _ in range(6)]
         self.road_slots: List[Road | None] = [None for _ in range(6)]
@@ -225,8 +225,11 @@ class DevelopmentCard(Construction):
 # print((5 + 2) % 6)
 # print(0 % 6)
 # print(Tile.create_board())
-# player1 = Player(name="Alice")
-# tile = Tile("Hills", 3)
-# _ = SettlementOrCity(player1, tile, 0)
-# print(player1.constructions)
+Tile.create_board()
+player1 = Player(name="Alice")
+print(player1.occupied_tiles)
+tile = Tile("Fields", 5)
+print(tile.neighbours)
+_ = SettlementOrCity(player1, tile, 0)
+print(player1.constructions)
 # print(len(player1.constructions))
