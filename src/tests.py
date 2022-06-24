@@ -68,3 +68,8 @@ class TestClass:
         assert str(player2.constructions[0]) == "Bob's Settlement"
         _ = game.Road(player1, tile, 0)
         assert len(player1.roads) == 1
+
+    def test_connected_tile_construction(self):
+        connected_tiles = [
+            game.Tile("Desert", 0)
+        ]

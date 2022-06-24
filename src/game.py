@@ -22,7 +22,9 @@ class Player:
 
     @property
     def controlled_tiles(self):
-        return [tile for tile in self.occupied_tiles if any(c is not None and c.owner is self for c in tile.construction_slots)]
+        """Find all tiles that the player has settled, and not just put roads on"""
+        return [tile for tile in self.occupied_tiles 
+            if any(c is not None and c.owner is self for c in tile.construction_slots)]
 
     @property
     def constructions(self):
@@ -77,6 +79,67 @@ class Tile:
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
+
+    @staticmethod
+    def create_board(config=None):
+        """Method to generate a board of linked tiles; spawned as 2d matrix but flattened return value"""
+    # if config.get("Tiles") is None:
+        tiles: List[List[Tile]] = [
+            [
+                Tile("Mountain", 10),
+                Tile("Pasture", 2),
+                Tile("Forest", 9)
+            ],
+            [
+                Tile("Fields", 12),
+                Tile("Hills", 6),
+                Tile("Pasture", 4),
+                Tile("Bricks", 10)
+            ],
+            [
+                Tile("Fields", 9),
+                Tile("Forest", 11),
+                Tile("Desert", 0),
+                Tile("Forest", 3),
+                Tile("Mountains", 8)
+            ],
+            [
+                Tile("Forest", 8),
+                Tile("Mountains", 3),
+                Tile("Fields", 4),
+                Tile("Pasture", 5)
+            ],
+            [
+                Tile("Hills", 5),
+                Tile("Fields", 6),
+                Tile("Pasture", 11)
+            ]
+        ]
+        
+        for e, layer in enumerate(tiles):
+            for f, tile in enumerate(layer):
+                if f + 1 < len(layer): # link horizontal neighbour
+                    tile.neighbours[1] == layer[f+1]
+                    layer[f+1].neighbours[4] = tile
+                if e < 4: # link vertical neighbour(s)
+                    if e < 2:
+                        south_west_tile = tiles[e+1][f]
+                        tile.neighbours[3] = south_west_tile
+                        south_west_tile.neighbours[0] = tile
+                        south_east_tile = tiles[e+1][f+1]
+                        tile.neighbours[2] = south_east_tile
+                        south_east_tile.neighbours[5] = tile
+                    else:
+                        if e > 0:
+                            south_west_tile = tiles[e+1][f-1]
+                            tile.neighbours[3] = south_west_tile
+                            south_west_tile.neighbours[0] = tile
+                        if f + 1 < len(layer):
+                            south_east_tile = tiles[e+1][f]
+                            tile.neighbours[2] = south_east_tile
+                            south_east_tile.neighbours[5] = tile
+
+        return [tile for layer in tiles for tile in layer]
 
 class Construction:
     """An item constructed by a player"""
