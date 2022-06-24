@@ -224,4 +224,9 @@ class DevelopmentCard(Construction):
 
 # print((5 + 2) % 6)
 # print(0 % 6)
-print(Tile.create_board())
+# print(Tile.create_board())
+# player1 = Player(name="Alice")
+# tile = Tile("Hills", 3)
+# _ = SettlementOrCity(player1, tile, 0)
+# print(player1.constructions)
+# print(len(player1.constructions))
