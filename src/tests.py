@@ -19,9 +19,9 @@ class TestClass:
     def test_construction_can_build(self):
         player = game.Player()
         player.resources.append(game.Resource.Brick)
-        assert not game.Construction.can_build("Road", player)
+        assert not game.Construction.can_build(player, "Road")
         player.resources.append(game.Resource.Lumber)
-        assert game.Construction.can_build("Road", player)
+        assert game.Construction.can_build(player, "Road")
         player.resources = [
             game.Resource.Ore, 
             game.Resource.Ore, 
@@ -29,10 +29,10 @@ class TestClass:
             game.Resource.Grain,
             game.Resource.Grain 
         ]
-        assert game.Construction.can_build("City", player)
+        assert game.Construction.can_build(player, "City")
         player.resources.pop()
-        assert not game.Construction.can_build("City", player)
-        assert not game.Construction.can_build("Development Card", player)
+        assert not game.Construction.can_build(player, "City")
+        assert not game.Construction.can_build(player, "Development Card")
 
     def test_construction_slot(self):
         tile = game.Tile("Hills", 3)

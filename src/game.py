@@ -18,12 +18,11 @@ class Player:
         self.resources: List[Resource] = []
         self.development_cards: List[DevelopmentCard] = []
         self.occupied_tiles: Set[Tile] = set()
-        self.controlled_tiles: Set[Tile] = set()
         self.victory_points = 0
 
     @property
     def controlled_tiles(self):
-        pass
+        return [tile for tile in self.occupied_tiles if any(c is not None and c.owner is self for c in tile.construction_slots)]
 
     @property
     def constructions(self):
@@ -124,18 +123,19 @@ class Road(Construction):
         self.tile = tile
         self.tile.road_slots[slot_idx] = self
         super().__init__("Road", owner)
+        self.owner.occupied_tiles.add(tile)
 
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
 
     def __init__(self, owner: Player, tile: Tile, slot_idx: int):
         assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
-        self.tiles = [tile] + tile.edge_neighbours
+        self.tiles = [tile] + tile.edge_neighbours(slot_idx)
         for e, tile in enumerate(self.tiles):
             idx = slot_idx + ((e * 2) % 6) # edges are returned clockwise; neighbour idx is + 2 each time
             tile.construction_slots[idx] = self
-            self.owner.controlled_tiles.add(tile)
         super().__init__("Settlement", owner)
+        self.owner.occupied_tiles.update(self.tiles)
         self.owner.victory_points += 1
 
     def upgrade_to_city(self):
@@ -156,5 +156,5 @@ class DevelopmentCard(Construction):
 # 4: 0/2
 # 5: 1/3
 
-print((5 + 2) % 6)
-print(0 % 6)
+# print((5 + 2) % 6)
+# print(0 % 6)
