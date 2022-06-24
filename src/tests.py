@@ -1,3 +1,4 @@
+"""Tests to run via pytest"""
 import game
 
 class TestClass:
@@ -50,14 +51,20 @@ class TestClass:
             Exception("Also not allowed to build on invalid index")
         except AssertionError:
             pass
+        road = game.Road(game.Player(), tile, 1)
+        assert tile.road_slots[1] is road
 
 
     def test_player_controlled_construction(self):
         player1 = game.Player(name="Alice")
-        player2 = game.Player(name="Bob")
         tile = game.Tile("Hills", 3)
-        settlement1 = game.SettlementOrCity(player1, tile, 0)
-        assert len(player1.constructions) == 0
-        # _ = game.SettlementOrCity(player2, tile, 1)
-        # _ = game.SettlementOrCity(player1, tile, 2)
-        # player1.controlled_tiles.append(tile)
+        _ = game.SettlementOrCity(player1, tile, 0)
+        assert len(player1.constructions) == 1
+        _ = game.SettlementOrCity(player1, tile, 1)
+        assert len(player1.constructions) == 2
+        player2 = game.Player(name="Bob")
+        _ = game.SettlementOrCity(player2, tile, 2)
+        assert len(player1.constructions) == 2
+        assert str(player2.constructions[0]) == "Bob's Settlement"
+        _ = game.Road(player1, tile, 0)
+        assert len(player1.roads) == 1
