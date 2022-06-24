@@ -70,6 +70,9 @@ class Tile:
         self.road_slots: List[Road | None] = [None for _ in range(6)]
         self.harbour_slot: Harbour | None = harbour
 
+    def __repr__(self):
+        return self.terrain
+
     def edge_neighbours(self, edge_idx: int):
         """Determine, given a single edge on the tile, what other tiles intersect with the edge"""
         if edge_idx == 0:
@@ -86,7 +89,7 @@ class Tile:
     # if config.get("Tiles") is None:
         tiles: List[List[Tile]] = [
             [
-                Tile("Mountain", 10),
+                Tile("Mountains", 10),
                 Tile("Pasture", 2),
                 Tile("Forest", 9)
             ],
@@ -94,7 +97,7 @@ class Tile:
                 Tile("Fields", 12),
                 Tile("Hills", 6),
                 Tile("Pasture", 4),
-                Tile("Bricks", 10)
+                Tile("Hills", 10)
             ],
             [
                 Tile("Fields", 9),
@@ -115,7 +118,7 @@ class Tile:
                 Tile("Pasture", 11)
             ]
         ]
-        
+
         for e, layer in enumerate(tiles):
             for f, tile in enumerate(layer):
                 if f + 1 < len(layer): # link horizontal neighbour
@@ -221,3 +224,4 @@ class DevelopmentCard(Construction):
 
 # print((5 + 2) % 6)
 # print(0 % 6)
+print(Tile.create_board())
