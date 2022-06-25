@@ -111,3 +111,15 @@ class TestClass:
         assert len(settlement5.tiles) == 3
         tile_names = [str(tile) for tile in settlement5.tiles]
         assert all(name in tile_names for name in ("Hills", "Forest", "Mountains"))
+
+    def test_harbours_on_created_board(self):
+        board = game.Tile.create_board()
+        assert sum(1 for _ in (harbour for layer in board for tile in layer for harbour in tile.harbour_slots 
+            if isinstance(harbour, game.Harbour))) == 24 # uses of harbour (by multiple tiles)
+        assert len(set(harbour for layer in board for tile in layer for harbour in tile.harbour_slots 
+            if isinstance(harbour, game.Harbour))) == 9 # harbour instances
+        assert len([slot for slot in board[0][0].harbour_slots if slot is not None]) == 2
+        assert str(board[0][0].harbour_slots[0]) == "General Harbour"
+        assert board[0][0].harbour_slots[0] is board[0][0].harbour_slots[5]
+        assert str(board[0][2].harbour_slots[2]) == "Ore Harbour"
+        assert board[0][2].harbour_slots[2] is board[1][3].harbour_slots[0]

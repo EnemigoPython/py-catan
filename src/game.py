@@ -51,6 +51,9 @@ class Harbour:
         self.rate = 3 if resource is None else 2
         self.resource: Resource | None = resource
 
+    def __repr__(self):
+        return f"{self.resource.name if self.resource else 'General'} Harbour"
+
 class Tile:
     """A single tile on the Catan game board"""
 
@@ -65,7 +68,8 @@ class Tile:
         "Pasture": Resource.Wool
     }
 
-    def __init__(self, terrain: str, number: int, neighbours: List[Self | None]=None, harbour=None):
+    def __init__(self, terrain: str, number: int, neighbours: List[Self | None]=None, 
+            harbours: List[Tuple[Harbour, int]]=None, has_robber=False):
         self.terrain = terrain
         self.number = number
         assert neighbours is None or len(neighbours) <= 6
@@ -73,10 +77,12 @@ class Tile:
         self.resource = self.resource_dict[self.terrain]
         self.construction_slots: List[Construction | None] = [None for _ in range(6)]
         self.road_slots: List[Road | None] = [None for _ in range(6)]
-        if isinstance(harbour, list):
-            self.harbour_slots: List[Tuple[Harbour, Tuple[int]] | None] = harbour
-        else:
-            self.harbour_slots = [harbour] or [None]
+        self.harbour_slots: List[Harbour | None] = [None for _ in range(6)]
+        if harbours:
+            for harbour, slot in harbours:
+                assert 0 <= slot < 6
+                self.harbour_slots[slot] = harbour
+        self.has_robber = has_robber
 
     def __repr__(self):
         return self.terrain
@@ -108,33 +114,33 @@ class Tile:
         ]
         tiles: List[List[Tile]] = _config.get("Tiles") or [
             [
-                Tile("Mountains", 10, harbour=harbours[0]),
-                Tile("Pasture", 2, harbour=harbours[1]),
-                Tile("Forest", 9, harbour=[harbours[1:2]])
+                Tile("Mountains", 10, harbours=[(harbours[0], 0), (harbours[0], 5)]),
+                Tile("Pasture", 2, harbours=[(harbours[1], 0), (harbours[1], 1)]),
+                Tile("Forest", 9, harbours=[(harbours[2], 2), (harbours[1], 5)])
             ],
             [
-                Tile("Fields", 12),
+                Tile("Fields", 12, harbours=[(harbours[3], 4), (harbours[3], 5)]),
                 Tile("Hills", 6),
                 Tile("Pasture", 4),
-                Tile("Hills", 10)
+                Tile("Hills", 10, harbours=[(harbours[2], 0), (harbours[2], 1)])
             ],
             [
-                Tile("Fields", 9),
+                Tile("Fields", 9, harbours=[(harbours[3], 0), (harbours[4], 3)]),
                 Tile("Forest", 11),
-                Tile("Desert", 0),
+                Tile("Desert", 0, has_robber=True),
                 Tile("Forest", 3),
-                Tile("Mountains", 8)
+                Tile("Mountains", 8, harbours=[(harbours[5], 1), (harbours[5], 2)])
             ],
             [
-                Tile("Forest", 8),
+                Tile("Forest", 8, harbours=[(harbours[3], 4), (harbours[3], 5)]),
                 Tile("Mountains", 3),
                 Tile("Fields", 4),
-                Tile("Pasture", 5)
+                Tile("Pasture", 5, harbours=[(harbours[6], 2), (harbours[6], 3)])
             ],
             [
-                Tile("Hills", 5),
-                Tile("Fields", 6),
-                Tile("Pasture", 11)
+                Tile("Hills", 5, harbours=[(harbours[7], 3), (harbours[7], 4)]),
+                Tile("Fields", 6, harbours=[(harbours[8], 2), (harbours[8], 3)]),
+                Tile("Pasture", 11, harbours=[(harbours[6], 1), (harbours[8], 4)])
             ]
         ]
 
