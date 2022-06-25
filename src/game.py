@@ -1,4 +1,5 @@
 """This file contains all game logic components as a library"""
+from __future__ import annotations
 from enum import Enum, auto
 from typing import List, Set, Dict, TypeVar, Tuple
 
@@ -41,8 +42,12 @@ class Player:
     def __repr__(self):
         return self.name
 
+    def init_position(self, board: List[List[Tile]]):
+        """Choose starting locations from a global board of tiles"""
+        pass
+
     def build(self, item):
-        assert Construction.has_resources(self, item)
+        assert Construction.has_resources_for(self, item)
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -57,8 +62,6 @@ class Harbour:
 class Tile:
     """A single tile on the Catan game board"""
 
-    Self = TypeVar("Self", bound="Tile")
-    
     resource_dict: Dict[str, str | None] = {
         "Desert": None,
         "Hills": Resource.Brick,
@@ -68,7 +71,7 @@ class Tile:
         "Pasture": Resource.Wool
     }
 
-    def __init__(self, terrain: str, number: int, neighbours: List[Self | None]=None, 
+    def __init__(self, terrain: str, number: int, neighbours: List[Tile | None]=None, 
             harbours: List[Tuple[Harbour, int]]=None, has_robber=False):
         self.terrain = terrain
         self.number = number
@@ -195,7 +198,7 @@ class Construction:
     }
 
     @staticmethod
-    def has_resources(player: Player, item: str):
+    def has_resources_for(player: Player, item: str):
         return all(player.resources.count(key) >= val for key, val in Construction.construction_dict[item].items())
 
     def __init__(self, name: str, owner: Player):

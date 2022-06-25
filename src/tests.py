@@ -19,9 +19,9 @@ class TestClass:
     def test_construction_has_resources(self):
         player = game.Player()
         player.resources.append(game.Resource.Brick)
-        assert not game.Construction.has_resources(player, "Road")
+        assert not game.Construction.has_resources_for(player, "Road")
         player.resources.append(game.Resource.Lumber)
-        assert game.Construction.has_resources(player, "Road")
+        assert game.Construction.has_resources_for(player, "Road")
         player.resources = [
             game.Resource.Ore, 
             game.Resource.Ore, 
@@ -29,10 +29,10 @@ class TestClass:
             game.Resource.Grain,
             game.Resource.Grain 
         ]
-        assert game.Construction.has_resources(player, "City")
+        assert game.Construction.has_resources_for(player, "City")
         player.resources.pop()
-        assert not game.Construction.has_resources(player, "City")
-        assert not game.Construction.has_resources(player, "Development Card")
+        assert not game.Construction.has_resources_for(player, "City")
+        assert not game.Construction.has_resources_for(player, "Development Card")
 
     def test_construction_slot(self):
         tile = game.Tile("Hills", 3)
@@ -123,3 +123,7 @@ class TestClass:
         assert board[0][0].harbour_slots[0] is board[0][0].harbour_slots[5]
         assert str(board[0][2].harbour_slots[2]) == "Ore Harbour"
         assert board[0][2].harbour_slots[2] is board[1][3].harbour_slots[0]
+
+    def test_player_init_position(self):
+        player = game.Player("Alice")
+        player.init_position(game.Tile.create_board())
