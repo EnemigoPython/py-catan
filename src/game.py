@@ -1,7 +1,7 @@
 """This file contains all game logic components as a library"""
 from __future__ import annotations
 from enum import Enum, auto
-from typing import List, Set, Dict, Tuple
+from typing import List, Set, Dict, Tuple, Generator
 
 class Resource(Enum):
     """Used by players to build construction items"""
@@ -58,8 +58,15 @@ class Player:
             board_location = board[road[1]][road[0]]
             Road(self, board_location, settlement[2])
 
-    def build(self, item):
+    def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None):
         assert Construction.has_resources_for(self, item)
+        match item:
+            case "Road": pass
+            case "Settlement":
+                intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
+                print(intersect_tiles)
+            case "Development Card": pass
+            case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -83,8 +90,8 @@ class Tile:
         "Pasture": Resource.Wool
     }
 
-    def __init__(self, terrain: str, number: int, neighbours: List[Tile | None]=None, 
-            harbours: List[Tuple[Harbour, int]]=None, has_robber=False):
+    def __init__(self, terrain: str, number: int, neighbours: List[Tile|None] = None, 
+            harbours: List[Tuple[Harbour, int]] = None, has_robber=False):
         self.terrain = terrain
         self.number = number
         assert neighbours is None or len(neighbours) <= 6
@@ -102,7 +109,7 @@ class Tile:
     def __repr__(self):
         return self.terrain
 
-    def vertex_neighbour(self, vertex_idx: int):
+    def vertex_neighbours(self, vertex_idx: int):
         """Determine, given a vertex of the tile, what other tiles are intersected"""
         if vertex_idx == 0:
             return self.neighbours[6::-5]
@@ -111,6 +118,14 @@ class Tile:
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
+
+    @staticmethod
+    def slot_idx_gen(tiles: List[Tile], slot_idx: int) -> Generator[Tuple[Tile | None, int]]:
+        """
+        Returns the correct slot for a single point across an intersection of clockwise tiles.
+        Does NOT eliminate Nonetypes and they shouldn't be removed for accurate values
+        """
+        return ((tile, (slot_idx + (e * 2)) % 6) for e, tile in enumerate(tiles))
 
     @staticmethod
     def create_board(config=None):
@@ -211,6 +226,7 @@ class Construction:
 
     @staticmethod
     def has_resources_for(player: Player, item: str):
+        """Method to check if a player has the correct resources to construct a given item"""
         return all(player.resources.count(key) >= val for key, val in Construction.construction_dict[item].items())
 
     def __init__(self, name: str, owner: Player):
@@ -236,11 +252,9 @@ class SettlementOrCity(Construction):
 
     def __init__(self, owner: Player, tile: Tile, slot_idx: int):
         assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
-        self.tiles = [tile] + tile.vertex_neighbour(slot_idx)
-        for e, tile in enumerate(self.tiles):
-            # None is left in the loop so that the idx is calculated correctly
+        self.tiles = [tile] + tile.vertex_neighbours(slot_idx)
+        for tile, idx in Tile.slot_idx_gen(self.tiles, slot_idx):
             if tile is None: continue
-            idx = (slot_idx + (e * 2)) % 6  # vertices are returned clockwise; neighbour idx is + 2 each time
             tile.construction_slots[idx] = self
         self.tiles: List[Tile] = [tile for tile in self.tiles if tile is not None] # once the loop has completed eliminate NoneTypes
         super().__init__("Settlement", owner)
@@ -272,6 +286,5 @@ board = Tile.create_board()
 # print(x[6::-5])
 
 player = Player("Alice")
-print(player.harbours)
-settlement = SettlementOrCity(player, board[0][0], 0)
-print(player.harbours)
+player.resources.extend([Resource.Brick, Resource.Grain, Resource.Wool, Resource.Lumber])
+player.build("Settlement", board[0][0], 2)
