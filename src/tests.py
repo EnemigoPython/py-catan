@@ -124,6 +124,9 @@ class TestClass:
         assert str(board[0][2].harbour_slots[2]) == "Ore Harbour"
         assert board[0][2].harbour_slots[2] is board[1][3].harbour_slots[0]
 
+    def test_player_owned_harbours(self):
+        pass
+
     def test_player_init_position(self):
         player = game.Player("Alice")
         player.init_position(game.Tile.create_board())

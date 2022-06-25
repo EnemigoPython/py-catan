@@ -39,12 +39,24 @@ class Player:
         return list(set(item for tile in self.occupied_tiles for item in tile.road_slots 
             if item is not None and item.owner is self))
 
+    @property
+    def harbours(self):
+        return list(set(harbour for tile in self.controlled_tiles for harbour in tile.harbour_slots
+            if harbour is not None and tile.construction_slots[tile.harbour_slots.index(harbour)]
+            in self.constructions))
+
     def __repr__(self):
         return self.name
 
-    def init_position(self, board: List[List[Tile]]):
+    def init_position(self, board: List[List[Tile]], settlements: List[Tuple[int, int, int]], 
+            roads: List[Tuple[int, int, int]]):
         """Choose starting locations from a global board of tiles"""
-        pass
+        for settlement in settlements:
+            board_location = board[settlement[1]][settlement[0]]
+            SettlementOrCity(self, board_location, settlement[2])
+        for road in roads:
+            board_location = board[road[1]][road[0]]
+            Road(self, board_location, settlement[2])
 
     def build(self, item):
         assert Construction.has_resources_for(self, item)
@@ -258,3 +270,8 @@ class DevelopmentCard(Construction):
 board = Tile.create_board()
 # x = [_ for _ in range(6)]
 # print(x[6::-5])
+
+player = Player("Alice")
+print(player.harbours)
+settlement = SettlementOrCity(player, board[0][0], 0)
+print(player.harbours)
