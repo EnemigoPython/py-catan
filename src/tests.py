@@ -125,8 +125,46 @@ class TestClass:
         assert board[0][2].harbour_slots[2] is board[1][3].harbour_slots[0]
 
     def test_player_owned_harbours(self):
-        pass
+        board = game.Tile.create_board()
+        player = game.Player("Alice")
+        assert len(player.harbours) == 0
+        game.SettlementOrCity(player, board[0][0], 0)
+        assert player.harbours[0].rate == 3
+        game.SettlementOrCity(player, board[0][0], 4)
+        assert len(player.harbours) == 1
+        player2 = game.Player("Bob")
+        game.SettlementOrCity(player2, board[0][2], 4)
+        assert len(player2.harbours) == 0
+        game.SettlementOrCity(player2, board[0][2], 2)
+        assert player2.harbours[0].resource is game.Resource.Ore
+        game.SettlementOrCity(player2, board[4][2], 1)
+        assert len(player2.harbours) == 2
+        resources = set(harbour.resource for harbour in player2.harbours)
+        assert game.Resource.Wool in resources
 
     def test_player_init_position(self):
-        player = game.Player("Alice")
-        # player.init_position(game.Tile.create_board())
+        board = game.Tile.create_board()
+        player1 = game.Player("Alice")
+        player1.init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (3, 2, 1)])
+        assert len(player1.constructions) == 2
+        assert len(player1.roads) == 2
+        assert len(player1.harbours) == 0
+        tile_types = set(tile.terrain for tile in player1.controlled_tiles)
+        assert all(terrain in tile_types for terrain in ("Forest", "Fields", "Hills", "Mountains", "Pasture"))
+        player2 = game.Player("Bob")
+        player2.init_position(board, [(2, 1, 1), (1, 4, 0)], [(2, 1, 0), (1, 4, 0)])
+        assert sum(1 for _ in (tile for tile in player2.controlled_tiles if tile.terrain == "Fields")) == 2
+        assert sum(1 for _ in (tile for tile in player2.controlled_tiles if tile.number == 4)) == 2
+        player3 = game.Player("Charlie")
+        player3.init_position(board, [(3, 3, 3)], [])
+        assert len(player3.constructions) == 1
+        assert len(player3.roads) == 0
+        assert len(player3.controlled_tiles) == 2
+        assert len(player3.occupied_tiles) == 2
+        assert len(player3.harbours) == 1
+        player4 = game.Player("Dennis")
+        try:
+            player4.init_position(board, [(3, 3, 3)], [])
+            raise Exception("Not allowed")
+        except AssertionError:
+            pass

@@ -1,7 +1,7 @@
 """This file contains all game logic components as a library"""
 from __future__ import annotations
 from enum import Enum, auto
-from typing import List, Set, Dict, TypeVar, Tuple
+from typing import List, Set, Dict, Tuple
 
 class Resource(Enum):
     """Used by players to build construction items"""
