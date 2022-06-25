@@ -129,4 +129,4 @@ class TestClass:
 
     def test_player_init_position(self):
         player = game.Player("Alice")
-        player.init_position(game.Tile.create_board())
+        # player.init_position(game.Tile.create_board())
