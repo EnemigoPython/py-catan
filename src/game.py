@@ -56,7 +56,7 @@ class Player:
             SettlementOrCity(self, board_location, settlement[2])
         for road in roads:
             board_location = board[road[1]][road[0]]
-            Road(self, board_location, settlement[2])
+            Road(self, board_location, road[2])
 
     def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None):
         assert Construction.has_resources_for(self, item)
@@ -64,7 +64,9 @@ class Player:
             case "Road": pass
             case "Settlement":
                 intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
-                print(intersect_tiles)
+                for tile, idx in Tile.slot_idx_gen(intersect_tiles, slot_idx):
+                    print(tile.road_slots[idx])
+                    print(tile, idx)
             case "Development Card": pass
             case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
 
@@ -107,7 +109,7 @@ class Tile:
         self.has_robber = has_robber
 
     def __repr__(self):
-        return self.terrain
+        return f"{self.terrain} ({self.number})"
 
     def vertex_neighbours(self, vertex_idx: int):
         """Determine, given a vertex of the tile, what other tiles are intersected"""
@@ -120,10 +122,10 @@ class Tile:
         return self.resource if number == self.number else None
 
     @staticmethod
-    def slot_idx_gen(tiles: List[Tile], slot_idx: int) -> Generator[Tuple[Tile | None, int]]:
+    def slot_idx_gen(tiles: List[Tile | None], slot_idx: int) -> Generator[Tuple[Tile | None, int]]:
         """
         Returns the correct slot for a single point across an intersection of clockwise tiles.
-        Does NOT eliminate Nonetypes and they shouldn't be removed for accurate values
+        Input Tiles can be None (thin air), and these should NOT be omitted for accurate values
         """
         return ((tile, (slot_idx + (e * 2)) % 6) for e, tile in enumerate(tiles))
 
@@ -246,6 +248,16 @@ class Road(Construction):
         self.tile.road_slots[slot_idx] = self
         super().__init__("Road", owner)
         self.owner.occupied_tiles.add(tile)
+        opposite_tile = tile.neighbours[slot_idx]
+        if opposite_tile is not None: # create mirror reference on opposite tile
+            inverted_slot_idx = (slot_idx + 3) % 6
+            assert opposite_tile.road_slots[inverted_slot_idx] is None
+            opposite_tile.road_slots[inverted_slot_idx] = self
+            self.owner.occupied_tiles.add(opposite_tile)
+
+    @staticmethod
+    def adjacent_roads(tile: Tile, vertex: int):
+        pass
 
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
@@ -281,10 +293,13 @@ class DevelopmentCard(Construction):
 
 # print((5 + 2) % 6)
 # print(0 % 6)
-board = Tile.create_board()
-# x = [_ for _ in range(6)]
-# print(x[6::-5])
+# board = Tile.create_board()
+# # x = [_ for _ in range(6)]
+# # print(x[6::-5])
 
-player = Player("Alice")
-player.resources.extend([Resource.Brick, Resource.Grain, Resource.Wool, Resource.Lumber])
-player.build("Settlement", board[0][0], 2)
+# player = Player("Alice")
+# player.resources.extend([Resource.Brick, Resource.Grain, Resource.Wool, Resource.Lumber])
+# # SettlementOrCity(player, board[1][1], 0)
+# Road(player, board[1][1], 0)
+# Road(player, board[0][1], 1)
+# player.build("Settlement", board[0][0], 2)
