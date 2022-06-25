@@ -1,6 +1,6 @@
 """This file contains all game logic components as a library"""
 from enum import Enum, auto
-from typing import List, Set, Dict, TypeVar
+from typing import List, Set, Dict, TypeVar, Tuple
 
 class Resource(Enum):
     """Used by players to build construction items"""
@@ -42,11 +42,14 @@ class Player:
         return self.name
 
     def build(self, item):
-        assert Construction.can_build(self, item)
+        assert Construction.has_resources(self, item)
 
 class Harbour:
     """A trading port that can be used for better deals"""
-    pass
+    
+    def __init__(self, resource=None):
+        self.rate = 3 if resource is None else 2
+        self.resource: Resource | None = resource
 
 class Tile:
     """A single tile on the Catan game board"""
@@ -70,7 +73,10 @@ class Tile:
         self.resource = self.resource_dict[self.terrain]
         self.construction_slots: List[Construction | None] = [None for _ in range(6)]
         self.road_slots: List[Road | None] = [None for _ in range(6)]
-        self.harbour_slot: Harbour | None = harbour
+        if isinstance(harbour, list):
+            self.harbour_slots: List[Tuple[Harbour, Tuple[int]] | None] = harbour
+        else:
+            self.harbour_slots = [harbour] or [None]
 
     def __repr__(self):
         return self.terrain
@@ -78,7 +84,7 @@ class Tile:
     def vertex_neighbour(self, vertex_idx: int):
         """Determine, given a vertex of the tile, what other tiles are intersected"""
         if vertex_idx == 0:
-            return self.neighbours[6:0:-4]
+            return self.neighbours[6::-5]
         return self.neighbours[vertex_idx-1:vertex_idx+1]
 
 
@@ -88,12 +94,23 @@ class Tile:
     @staticmethod
     def create_board(config=None):
         """Method to generate a board of linked tiles; returned as matrix"""
-    # if config.get("Tiles") is None:
-        tiles: List[List[Tile]] = [
+        _config: dict = config or {}
+        harbours = _config.get("harbours") or [
+            Harbour(),
+            Harbour(Resource.Grain),
+            Harbour(Resource.Ore),
+            Harbour(Resource.Lumber),
+            Harbour(Resource.Brick),
+            Harbour(),
+            Harbour(Resource.Wool),
+            Harbour(),
+            Harbour()
+        ]
+        tiles: List[List[Tile]] = _config.get("Tiles") or [
             [
-                Tile("Mountains", 10),
-                Tile("Pasture", 2),
-                Tile("Forest", 9)
+                Tile("Mountains", 10, harbour=harbours[0]),
+                Tile("Pasture", 2, harbour=harbours[1]),
+                Tile("Forest", 9, harbour=[harbours[1:2]])
             ],
             [
                 Tile("Fields", 12),
@@ -172,7 +189,7 @@ class Construction:
     }
 
     @staticmethod
-    def can_build(player: Player, item: str):
+    def has_resources(player: Player, item: str):
         return all(player.resources.count(key) >= val for key, val in Construction.construction_dict[item].items())
 
     def __init__(self, name: str, owner: Player):
@@ -230,3 +247,5 @@ class DevelopmentCard(Construction):
 # print((5 + 2) % 6)
 # print(0 % 6)
 board = Tile.create_board()
+# x = [_ for _ in range(6)]
+# print(x[6::-5])

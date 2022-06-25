@@ -16,12 +16,12 @@ class TestClass:
         except AssertionError:
             pass
 
-    def test_construction_can_build(self):
+    def test_construction_has_resources(self):
         player = game.Player()
         player.resources.append(game.Resource.Brick)
-        assert not game.Construction.can_build(player, "Road")
+        assert not game.Construction.has_resources(player, "Road")
         player.resources.append(game.Resource.Lumber)
-        assert game.Construction.can_build(player, "Road")
+        assert game.Construction.has_resources(player, "Road")
         player.resources = [
             game.Resource.Ore, 
             game.Resource.Ore, 
@@ -29,10 +29,10 @@ class TestClass:
             game.Resource.Grain,
             game.Resource.Grain 
         ]
-        assert game.Construction.can_build(player, "City")
+        assert game.Construction.has_resources(player, "City")
         player.resources.pop()
-        assert not game.Construction.can_build(player, "City")
-        assert not game.Construction.can_build(player, "Development Card")
+        assert not game.Construction.has_resources(player, "City")
+        assert not game.Construction.has_resources(player, "Development Card")
 
     def test_construction_slot(self):
         tile = game.Tile("Hills", 3)
@@ -101,6 +101,13 @@ class TestClass:
         assert settlement2.tiles[0] is board[2][0]
         settlement3 = game.SettlementOrCity(player, board[2][0], 0)
         assert len(settlement3.tiles) == 2
-        print([(i, i.construction_slots) for i in settlement3.tiles])
-        print(board[1][0] is settlement3.tiles[0])
         assert board[1][0].construction_slots[4] is settlement3
+        settlement4 = game.SettlementOrCity(player, board[4][0], 1)
+        assert len(settlement4.tiles) == 3
+        tile_numbers = [tile.number for tile in settlement4.tiles]
+        assert all(num in tile_numbers for num in (3, 5, 6))
+        assert len(player.constructions) == 4
+        settlement5 = game.SettlementOrCity(player, board[2][4], 5)
+        assert len(settlement5.tiles) == 3
+        tile_names = [str(tile) for tile in settlement5.tiles]
+        assert all(name in tile_names for name in ("Hills", "Forest", "Mountains"))
