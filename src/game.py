@@ -61,13 +61,20 @@ class Player:
     def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None):
         assert Construction.has_resources_for(self, item)
         match item:
-            case "Road": pass
+            case "Road":
+                intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
+                assert any(settlement.owner is self 
+                    for settlement in SettlementOrCity.adjacent_settlements(intersect_tiles, slot_idx)) or \
+                    any(road.owner is self for road in Road.adjacent_roads(intersect_tiles, slot_idx))
+                Road(self, tile, slot_idx)
             case "Settlement":
                 intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
                 assert any(road.owner is self for road in Road.adjacent_roads(intersect_tiles, slot_idx))
-                print(True)
+                assert not SettlementOrCity.adjacent_settlements(intersect_tiles, slot_idx)
+                SettlementOrCity(self, tile, slot_idx)
             case "Development Card": pass
             case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
+        for item in Construction.construction_dict[item]: self.resources.remove(item)
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -115,6 +122,10 @@ class Tile:
         if vertex_idx == 0:
             return self.neighbours[6::-5]
         return self.neighbours[vertex_idx-1:vertex_idx+1]
+
+    def edge_neighbours(self, edge_idx: int):
+        """Determine, given an edge of the tile, what other tiles are intersected"""
+        return self.vertex_neighbours(edge_idx) + self.vertex_neighbours((edge_idx+1)%6)[-1::]
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
@@ -253,10 +264,11 @@ class Road(Construction):
             opposite_tile.road_slots[inverted_slot_idx] = self
             self.owner.occupied_tiles.add(opposite_tile)
 
-    def adjacent_roads(intersect_tiles: List[Tile], slot_idx: int):
+    @staticmethod
+    def adjacent_roads(intersect_tiles: List[Tile], slot_idx: int) -> List[Road]:
         """Return Roads from a given board vertex, eliminating None values"""
-        return [tile.road_slots[idx] for (tile, idx) in Tile.slot_idx_gen(intersect_tiles, slot_idx) 
-            if tile is not None and tile.road_slots[idx] is not None]
+        return [tile.road_slots[idx-1] for (tile, idx) in Tile.slot_idx_gen(intersect_tiles, slot_idx) 
+            if tile is not None and tile.road_slots[idx-1] is not None]
 
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
@@ -276,6 +288,12 @@ class SettlementOrCity(Construction):
         self.name = "City"
         self.owner.victory_points += 1
 
+    @staticmethod
+    def adjacent_settlements(intersect_tiles: List[Tile], slot_idx: int) -> List[Construction]:
+        """Return Settlements/Cities from a given board vertex, eliminating None values"""
+        return [tile.construction_slots[idx] for (tile, idx) in Tile.slot_idx_gen(intersect_tiles, slot_idx) 
+            if tile is not None and tile.construction_slots[idx] is not None]
+
 class DevelopmentCard(Construction):
     """Mystery card to give players an edge"""
 
@@ -293,16 +311,18 @@ class DevelopmentCard(Construction):
 # print((5 + 2) % 6)
 # print(0 % 6)
 board = Tile.create_board()
-# # x = [_ for _ in range(6)]
 # # print(x[6::-5])
 
 player = Player("Alice")
-player.resources.extend([Resource.Brick, Resource.Grain, Resource.Wool, Resource.Lumber])
-# # SettlementOrCity(player, board[1][1], 0)
-# Road(player, board[1][1], 0)
-# Road(player, board[0][1], 3)
-# Road(player, board[1][1], 5)
-# Road(player, board[0][0], 2)
-# Road(player, board[0][1], 4)
-Road(player, board[0][0], 1)
-player.build("Settlement", board[0][0], 2)
+player.resources.extend([
+    Resource.Brick, 
+    Resource.Lumber
+])
+player.init_position(board, [], [(1, 1, 5)])
+print(board[1][1].edge_neighbours(0))
+print(board[1][1].edge_neighbours(1))
+print(board[1][1].edge_neighbours(2))
+print(board[1][1].edge_neighbours(3))
+print(board[1][1].edge_neighbours(4))
+print(board[1][1].edge_neighbours(5))
+# player.build("Settlement", board[0][0], 2)
