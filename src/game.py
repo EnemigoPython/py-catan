@@ -62,15 +62,14 @@ class Player:
         assert Construction.has_resources_for(self, item)
         match item:
             case "Road":
-                intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
+                print(tile.adjacent_roads(slot_idx), tile.adjacent_settlements(slot_idx))
                 assert any(settlement.owner is self 
-                    for settlement in SettlementOrCity.adjacent_settlements(intersect_tiles, slot_idx)) or \
-                    any(road.owner is self for road in Road.adjacent_roads(intersect_tiles, slot_idx))
+                    for settlement in tile.adjacent_settlements(slot_idx)) or \
+                    any(road.owner is self for road in tile.adjacent_roads(slot_idx))
                 Road(self, tile, slot_idx)
             case "Settlement":
-                intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
-                assert any(road.owner is self for road in Road.adjacent_roads(intersect_tiles, slot_idx))
-                assert not SettlementOrCity.adjacent_settlements(intersect_tiles, slot_idx)
+                assert any(road.owner is self for road in Road.adjacent_roads(tile, slot_idx))
+                assert not tile.adjacent_settlements(slot_idx)
                 SettlementOrCity(self, tile, slot_idx)
             case "Development Card": pass
             case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
@@ -118,13 +117,40 @@ class Tile:
         return f"{self.terrain} ({self.number})"
 
     def vertex_neighbours(self, vertex_idx: int):
-        """Determine, given a vertex of the tile, what other tiles are intersected"""
+        """
+        Determine, given a vertex of the tile, what other tiles are intersected.
+        Returned clockwise, includes Nonetype values
+        """
         if vertex_idx == 0:
             return self.neighbours[6::-5]
         return self.neighbours[vertex_idx-1:vertex_idx+1]
 
+    def adjacent_roads(self, edge_idx: int):
+        """
+        Return a list of all Roads adjacent to a tile edge
+        """
+        roads = [self.road_slots[edge_idx-1], self.road_slots[(edge_idx+1)%6]]
+        for e, tile in enumerate(self.vertex_neighbours(edge_idx), 1):
+            if tile is not None:
+                roads.append(tile.road_slots[(edge_idx+e)%6])
+        return [road for road in roads if road is not None]
+
+    def adjacent_settlements(self, vertex_idx: int):
+        """
+        Return a list of all Settlements (or Cities) adjacent to a tile vertex
+        """
+        intersect = [self] + self.vertex_neighbours(vertex_idx)
+        settlements = []
+        for tile, idx in self.slot_idx_gen(intersect, vertex_idx):
+            if tile is not None and tile.construction_slots[idx-1] is not None:
+                settlements.append(tile.construction_slots[idx-1])
+        return settlements
+
     def edge_neighbours(self, edge_idx: int):
-        """Determine, given an edge of the tile, what other tiles are intersected"""
+        """
+        Determine, given an edge of the tile, what other tiles are intersected.
+        Returned clockwise
+        """
         return self.vertex_neighbours(edge_idx) + self.vertex_neighbours((edge_idx+1)%6)[-1::]
 
     def check_proc(self, number: int):
@@ -264,12 +290,6 @@ class Road(Construction):
             opposite_tile.road_slots[inverted_slot_idx] = self
             self.owner.occupied_tiles.add(opposite_tile)
 
-    @staticmethod
-    def adjacent_roads(intersect_tiles: List[Tile], slot_idx: int) -> List[Road]:
-        """Return Roads from a given board vertex, eliminating None values"""
-        return [tile.road_slots[idx-1] for (tile, idx) in Tile.slot_idx_gen(intersect_tiles, slot_idx) 
-            if tile is not None and tile.road_slots[idx-1] is not None]
-
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
 
@@ -287,12 +307,6 @@ class SettlementOrCity(Construction):
     def upgrade_to_city(self):
         self.name = "City"
         self.owner.victory_points += 1
-
-    @staticmethod
-    def adjacent_settlements(intersect_tiles: List[Tile], slot_idx: int) -> List[Construction]:
-        """Return Settlements/Cities from a given board vertex, eliminating None values"""
-        return [tile.construction_slots[idx] for (tile, idx) in Tile.slot_idx_gen(intersect_tiles, slot_idx) 
-            if tile is not None and tile.construction_slots[idx] is not None]
 
 class DevelopmentCard(Construction):
     """Mystery card to give players an edge"""
@@ -318,11 +332,19 @@ player.resources.extend([
     Resource.Brick, 
     Resource.Lumber
 ])
-player.init_position(board, [], [(1, 1, 5)])
-print(board[1][1].edge_neighbours(0))
-print(board[1][1].edge_neighbours(1))
-print(board[1][1].edge_neighbours(2))
+player.init_position(board, [(1, 1, 4)], [(1, 1, 5)])
+# print(board[1][1].edge_neighbours(0))
+# print(board[1][1].edge_neighbours(1))
+# print(board[1][1].edge_neighbours(2))
 print(board[1][1].edge_neighbours(3))
 print(board[1][1].edge_neighbours(4))
 print(board[1][1].edge_neighbours(5))
+# print(board[1][0].adjacent_roads(1))
+print(board[1][0].adjacent_roads(2))
+print(board[1][0].adjacent_settlements(3))
 # player.build("Settlement", board[0][0], 2)
+# index Hills 6 -> 5
+# Fields 12 -> 1
+# Mountains 10 -> 1
+
+# slot_idx + (e * 2)) % 6)

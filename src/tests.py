@@ -235,37 +235,43 @@ class TestClass:
         except AssertionError:
             pass
 
-    def test_build_road_method(self):
+    def test_adjacent_roads_detection(self):
         board = Tile.create_board()
         player1 = Player("Alice")
-        player1.resources.extend([
-            Resource.Brick, 
-            Resource.Lumber, 
-            Resource.Brick, 
-            Resource.Lumber, 
-            Resource.Brick, 
-            Resource.Lumber, 
-            Resource.Brick, 
-            Resource.Lumber,
-            Resource.Brick,
-            Resource.Lumber
-        ])
-        player1.init_position(board, [(0, 1, 2), (3, 2, 2)], [(3, 2, 1)])
-        player1.build("Road", board[1][0], 2)
-        player1.build("Road", board[2][0], 1)
-        player1.build("Road", board[2][4], 5)
-        # print(board[2][1].vertex_neighbours(3))
-        # player1.build("Road", board[2][1], 3)
-        try:
-            player1.build("Road", board[2][4], 1)
-            raise Exception("This road isn't connected to anything")
-        except AssertionError:
-            pass
-        player2 = Player("Bob")
-        player2.init_position(board, [(0, 4, 1)], [])
-        player2.resources.extend([Resource.Brick, Resource.Lumber])
-        try:
-            player2.build("Road", board[2][4], 0)
-            raise Exception("Bob doesn't own the adjacent road")
-        except AssertionError:
-            pass
+        player.init_position(board, [], [(1, 1, 5)])
+        assert len(board[1][1].adjacent_roads(4)) == 1
+
+    # def test_build_road_method(self):
+    #     board = Tile.create_board()
+    #     player1 = Player("Alice")
+    #     player1.resources.extend([
+    #         Resource.Brick, 
+    #         Resource.Lumber, 
+    #         Resource.Brick, 
+    #         Resource.Lumber, 
+    #         Resource.Brick, 
+    #         Resource.Lumber, 
+    #         Resource.Brick, 
+    #         Resource.Lumber,
+    #         Resource.Brick,
+    #         Resource.Lumber
+    #     ])
+    #     player1.init_position(board, [(0, 1, 2), (3, 2, 2)], [(3, 2, 1)])
+    #     player1.build("Road", board[1][0], 2)
+    #     player1.build("Road", board[2][0], 1)
+    #     player1.build("Road", board[2][4], 5)
+    #     # print(board[2][1].vertex_neighbours(3))
+    #     player1.build("Road", board[2][1], 3)
+    #     try:
+    #         player1.build("Road", board[2][4], 1)
+    #         raise Exception("This road isn't connected to anything")
+    #     except AssertionError:
+    #         pass
+    #     player2 = Player("Bob")
+    #     player2.init_position(board, [(0, 4, 1)], [])
+    #     player2.resources.extend([Resource.Brick, Resource.Lumber])
+    #     try:
+    #         player2.build("Road", board[2][4], 0)
+    #         raise Exception("Bob doesn't own the adjacent road")
+    #     except AssertionError:
+    #         pass
