@@ -64,11 +64,8 @@ class Player:
             case "Road": pass
             case "Settlement":
                 intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
-                print(any(road is not None and road.owner is self \
-                    for tile, idx in Tile.slot_idx_gen(intersect_tiles, slot_idx) for road in tile.road_slots[idx]))
-                # for tile, idx in Tile.slot_idx_gen(intersect_tiles, slot_idx):
-                #     print(tile.road_slots[idx])
-                #     print(tile, idx)
+                assert any(road.owner is self for road in Road.adjacent_roads(intersect_tiles, slot_idx))
+                print(True)
             case "Development Card": pass
             case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
 
@@ -256,6 +253,11 @@ class Road(Construction):
             opposite_tile.road_slots[inverted_slot_idx] = self
             self.owner.occupied_tiles.add(opposite_tile)
 
+    def adjacent_roads(intersect_tiles: List[Tile], slot_idx: int):
+        """Return Roads from a given board vertex, eliminating None values"""
+        return [tile.road_slots[idx] for (tile, idx) in Tile.slot_idx_gen(intersect_tiles, slot_idx) 
+            if tile is not None and tile.road_slots[idx] is not None]
+
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
 
@@ -298,9 +300,9 @@ player = Player("Alice")
 player.resources.extend([Resource.Brick, Resource.Grain, Resource.Wool, Resource.Lumber])
 # # SettlementOrCity(player, board[1][1], 0)
 # Road(player, board[1][1], 0)
-Road(player, board[0][1], 3)
+# Road(player, board[0][1], 3)
 # Road(player, board[1][1], 5)
-Road(player, board[0][0], 2)
+# Road(player, board[0][0], 2)
 # Road(player, board[0][1], 4)
 Road(player, board[0][0], 1)
 player.build("Settlement", board[0][0], 2)
