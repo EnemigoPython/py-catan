@@ -64,9 +64,11 @@ class Player:
             case "Road": pass
             case "Settlement":
                 intersect_tiles = [tile] + tile.vertex_neighbours(slot_idx)
-                for tile, idx in Tile.slot_idx_gen(intersect_tiles, slot_idx):
-                    print(tile.road_slots[idx])
-                    print(tile, idx)
+                print(any(road is not None and road.owner is self \
+                    for tile, idx in Tile.slot_idx_gen(intersect_tiles, slot_idx) for road in tile.road_slots[idx]))
+                # for tile, idx in Tile.slot_idx_gen(intersect_tiles, slot_idx):
+                #     print(tile.road_slots[idx])
+                #     print(tile, idx)
             case "Development Card": pass
             case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
 
@@ -116,7 +118,6 @@ class Tile:
         if vertex_idx == 0:
             return self.neighbours[6::-5]
         return self.neighbours[vertex_idx-1:vertex_idx+1]
-
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
@@ -255,10 +256,6 @@ class Road(Construction):
             opposite_tile.road_slots[inverted_slot_idx] = self
             self.owner.occupied_tiles.add(opposite_tile)
 
-    @staticmethod
-    def adjacent_roads(tile: Tile, vertex: int):
-        pass
-
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
 
@@ -293,13 +290,17 @@ class DevelopmentCard(Construction):
 
 # print((5 + 2) % 6)
 # print(0 % 6)
-# board = Tile.create_board()
+board = Tile.create_board()
 # # x = [_ for _ in range(6)]
 # # print(x[6::-5])
 
-# player = Player("Alice")
-# player.resources.extend([Resource.Brick, Resource.Grain, Resource.Wool, Resource.Lumber])
+player = Player("Alice")
+player.resources.extend([Resource.Brick, Resource.Grain, Resource.Wool, Resource.Lumber])
 # # SettlementOrCity(player, board[1][1], 0)
 # Road(player, board[1][1], 0)
-# Road(player, board[0][1], 1)
-# player.build("Settlement", board[0][0], 2)
+Road(player, board[0][1], 3)
+# Road(player, board[1][1], 5)
+Road(player, board[0][0], 2)
+# Road(player, board[0][1], 4)
+Road(player, board[0][0], 1)
+player.build("Settlement", board[0][0], 2)
