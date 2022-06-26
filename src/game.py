@@ -297,8 +297,8 @@ class SettlementOrCity(Construction):
         assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
         self.tiles = [tile] + tile.vertex_neighbours(slot_idx)
         for tile, idx in Tile.slot_idx_gen(self.tiles, slot_idx):
-            if tile is None: continue
-            tile.construction_slots[idx] = self
+            if tile is not None:
+                tile.construction_slots[idx] = self
         self.tiles: List[Tile] = [tile for tile in self.tiles if tile is not None] # once the loop has completed eliminate NoneTypes
         super().__init__("Settlement", owner)
         self.owner.occupied_tiles.update(self.tiles)
