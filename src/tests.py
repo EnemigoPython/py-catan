@@ -256,7 +256,22 @@ class TestClass:
         assert len(board[3][1].adjacent_roads(2)) == 2
 
     def test_adjacent_settlements_detection(self):
-        pass
+        board = Tile.create_board()
+        player1 = Player("Alice")
+        player1.init_position(board, [(1, 1, 4), (0, 0, 2)], [])
+        assert len(board[1][0].adjacent_settlements(1)) == 2
+        assert len(board[0][1].adjacent_settlements(3)) == 1
+        assert len(board[1][1].adjacent_settlements(2)) == 0
+        player2 = Player("Bob")
+        player2.init_position(board, [(1, 2, 2)], [])
+        assert len(board[2][1].adjacent_settlements(1)) == 2
+        adjacent_settlements = [str(s) for s in board[2][1].adjacent_settlements(1)]
+        assert all(s in adjacent_settlements for s in ("Alice's Settlement", "Bob's Settlement"))
+        player3 = Player("Charlie")
+        player3.init_position(board, [(1, 1, 2)], [])
+        assert len(board[2][1].adjacent_settlements(1)) == 3
+        adjacent_settlements = set(str(s) for s in board[2][1].adjacent_settlements(1))
+        assert len(adjacent_settlements) == 3
 
     # def test_build_road_method(self):
     #     board = Tile.create_board()

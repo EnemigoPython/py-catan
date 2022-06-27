@@ -125,7 +125,7 @@ class Tile:
             return self.neighbours[6::-5]
         return self.neighbours[vertex_idx-1:vertex_idx+1]
 
-    def adjacent_roads(self, edge_idx: int):
+    def adjacent_roads(self, edge_idx: int) -> List[Road]:
         """
         Return a list of all Roads adjacent to a tile edge
         """
@@ -135,23 +135,13 @@ class Tile:
                 roads.append(tile.road_slots[(edge_idx+e)%6])
         return [road for road in roads if road is not None]
 
-    def adjacent_settlements(self, vertex_idx: int):
+    def adjacent_settlements(self, vertex_idx: int) -> List[SettlementOrCity]:
         """
         Return a list of all Settlements (or Cities) adjacent to a tile vertex
         """
-        intersect = [self] + self.vertex_neighbours(vertex_idx)
-        settlements = []
-        for tile, idx in self.slot_idx_gen(intersect, vertex_idx):
-            if tile is not None and tile.construction_slots[idx-1] is not None:
-                settlements.append(tile.construction_slots[idx-1])
-        return settlements
-
-    def edge_neighbours(self, edge_idx: int):
-        """
-        Determine, given an edge of the tile, what other tiles are intersected.
-        Returned clockwise
-        """
-        return self.vertex_neighbours(edge_idx) + self.vertex_neighbours((edge_idx+1)%6)[-1::]
+        intersection = [self] + self.vertex_neighbours(vertex_idx)
+        return [tile.construction_slots[idx-1] for (tile, idx) in self.slot_idx_gen(intersection, vertex_idx)
+            if tile is not None and tile.construction_slots[idx-1] is not None]
 
     def check_proc(self, number: int):
         return self.resource if number == self.number else None
@@ -159,8 +149,8 @@ class Tile:
     @staticmethod
     def slot_idx_gen(tiles: List[Tile | None], slot_idx: int) -> Generator[Tuple[Tile | None, int]]:
         """
-        Returns the correct slot for a single point across an intersection of clockwise tiles.
-        Input Tiles can be None (thin air), and these should NOT be omitted for accurate values
+        Returns the correct slot indices for a single point across an intersection of clockwise tiles.
+        Input Tiles can be None (shoreline), and these should NOT be omitted for accurate values
         """
         return ((tile, (slot_idx + (e * 2)) % 6) for e, tile in enumerate(tiles))
 
@@ -336,12 +326,14 @@ player.init_position(board, [(1, 1, 4)], [(1, 1, 5)])
 # print(board[1][1].edge_neighbours(0))
 # print(board[1][1].edge_neighbours(1))
 # print(board[1][1].edge_neighbours(2))
-print(board[1][1].edge_neighbours(3))
-print(board[1][1].edge_neighbours(4))
-print(board[1][1].edge_neighbours(5))
+# print(board[1][1].edge_neighbours(3))
+# print(board[1][1].edge_neighbours(4))
+# print(board[1][1].edge_neighbours(5))
 # print(board[1][0].adjacent_roads(1))
-print(board[1][0].adjacent_roads(2))
+# print(board[1][0].adjacent_roads(2))
 print(board[1][0].adjacent_settlements(3))
+print(board[0][0].adjacent_settlements(3))
+print(board[1][0].adjacent_settlements(1))
 # player.build("Settlement", board[0][0], 2)
 # index Hills 6 -> 5
 # Fields 12 -> 1
