@@ -318,7 +318,7 @@ class DevelopmentCard(Construction):
     def use_victory_point(self):
         self.owner.victory_points += 1
 
-    def use_monopoly(self, players):
+    def use_monopoly(self, players: List[Player], resource: Resource):
         pass
 
 
