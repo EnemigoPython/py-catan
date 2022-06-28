@@ -300,8 +300,26 @@ class SettlementOrCity(Construction):
 class DevelopmentCard(Construction):
     """Mystery card to give players an edge"""
 
-    def __init__(self, owner: Player):
+    def __init__(self, owner: Player, card_type: str):
         super().__init__("Development Card", owner)
+        self.card_type = card_type
+
+    def use_card(self, *args):
+        card_fn_dict = {
+            "knight": self.use_knight,
+            "victory_point": self.use_victory_point,
+            "monopoly": self.use_monopoly
+        }
+        card_fn_dict[self.card_type](args)
+
+    def use_knight(self):
+        pass
+
+    def use_victory_point(self):
+        self.owner.victory_points += 1
+
+    def use_monopoly(self, players):
+        pass
 
 
 # 0: 2/4
