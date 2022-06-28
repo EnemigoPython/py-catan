@@ -62,13 +62,12 @@ class Player:
         assert Construction.has_resources_for(self, item)
         match item:
             case "Road":
-                print(tile.adjacent_roads(slot_idx), tile.adjacent_settlements(slot_idx))
                 assert any(settlement.owner is self 
                     for settlement in tile.adjacent_settlements(slot_idx)) or \
                     any(road.owner is self for road in tile.adjacent_roads(slot_idx))
                 Road(self, tile, slot_idx)
             case "Settlement":
-                assert any(road.owner is self for road in Road.adjacent_roads(tile, slot_idx))
+                assert any(road.owner is self for road in tile.adjacent_roads(slot_idx))
                 assert not tile.adjacent_settlements(slot_idx)
                 SettlementOrCity(self, tile, slot_idx)
             case "Development Card": pass
