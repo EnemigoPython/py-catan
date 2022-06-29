@@ -143,7 +143,7 @@ class Tile:
             if tile is not None and tile.construction_slots[idx-1] is not None]
 
     def check_proc(self, number: int):
-        return self.resource if number == self.number else None
+        return self.resource if number == self.number and not self.has_robber else None
 
     @staticmethod
     def slot_idx_gen(tiles: List[Tile | None], slot_idx: int) -> Generator[Tuple[Tile | None, int]]:
@@ -300,9 +300,9 @@ class SettlementOrCity(Construction):
 class DevelopmentCard(Construction):
     """Mystery card to give players an edge"""
 
-    def __init__(self, owner: Player, card_type: str):
+    def __init__(self, owner: Player, card_type: str, can_use: bool = False):
         self.card_type = card_type
-        self.can_use = False
+        self.can_use = can_use
         super().__init__("Development Card", owner)
 
     def use_card(self, *args):
@@ -320,11 +320,18 @@ class DevelopmentCard(Construction):
     def use_victory_point(self):
         self.owner.victory_points += 1
 
-    def use_road_building(self, tiles: Tuple[Tile]):
-        pass
+    def use_road_building(self, tiles: Tuple[Tile], slots: Tuple[int]):
+        for tile, slot in zip(tiles, slots):
+            self.owner.build("Road", tile, slot)
 
     def use_year_of_plenty(self):
         pass
 
     def use_monopoly(self, players: List[Player], resource: Resource):
         pass
+
+class Board:
+    pass    # TODO: move create_board to __init__ here
+            # this should have tiles: List[List[Tile]
+            # and players: List[Player]
+            # and robber_tile: Tile 
