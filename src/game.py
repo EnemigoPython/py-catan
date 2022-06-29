@@ -301,14 +301,16 @@ class DevelopmentCard(Construction):
     """Mystery card to give players an edge"""
 
     def __init__(self, owner: Player, card_type: str):
-        super().__init__("Development Card", owner)
         self.card_type = card_type
+        self.can_use = False
+        super().__init__("Development Card", owner)
 
     def use_card(self, *args):
         card_fn_dict = {
             "knight": self.use_knight,
-            "victory_point": self.use_victory_point,
-            "monopoly": self.use_monopoly
+            "victory point": self.use_victory_point,
+            "monopoly": self.use_monopoly,
+            "road building": self.use_road_building
         }
         card_fn_dict[self.card_type](args)
 
@@ -318,42 +320,11 @@ class DevelopmentCard(Construction):
     def use_victory_point(self):
         self.owner.victory_points += 1
 
-    def use_monopoly(self, players: List[Player], resource: Resource):
+    def use_road_building(self, tiles: Tuple[Tile]):
         pass
 
+    def use_year_of_plenty(self):
+        pass
 
-# 0: 2/4
-# 1: 3/5
-# 2: 4/0
-# 3: 5/1
-# 4: 0/2
-# 5: 1/3
-
-# print((5 + 2) % 6)
-# print(0 % 6)
-board = Tile.create_board()
-# # print(x[6::-5])
-
-player = Player("Alice")
-player.resources.extend([
-    Resource.Brick, 
-    Resource.Lumber
-])
-player.init_position(board, [(1, 1, 4)], [(1, 1, 5)])
-# print(board[1][1].edge_neighbours(0))
-# print(board[1][1].edge_neighbours(1))
-# print(board[1][1].edge_neighbours(2))
-# print(board[1][1].edge_neighbours(3))
-# print(board[1][1].edge_neighbours(4))
-# print(board[1][1].edge_neighbours(5))
-# print(board[1][0].adjacent_roads(1))
-# print(board[1][0].adjacent_roads(2))
-print(board[1][0].adjacent_settlements(3))
-print(board[0][0].adjacent_settlements(3))
-print(board[1][0].adjacent_settlements(1))
-# player.build("Settlement", board[0][0], 2)
-# index Hills 6 -> 5
-# Fields 12 -> 1
-# Mountains 10 -> 1
-
-# slot_idx + (e * 2)) % 6)
+    def use_monopoly(self, players: List[Player], resource: Resource):
+        pass
