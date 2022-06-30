@@ -68,15 +68,22 @@ class TestClass:
         _ = Road(player1, tile, 0)
         assert len(player1.roads) == 1
 
-    def test_create_board(self):
-        board = Tile.create_board()
+    def test_board_init(self):
+        board = Board()
         assert len(board) == 5
         assert sum(len(l) for l in board) == 19
-        assert str(board[0][0]) == "Mountains (10)"
-        assert board[0][0].neighbours == [None, board[0][1], board[1][1], board[1][0], None, None]
-        assert board[0][0].neighbours[1].neighbours[4] == board[0][0]
-        assert board[0][1].neighbours == [None, board[0][2], board[1][2], board[1][1], board[0][0], None]
-        assert [str(i) for i in board[1][3].neighbours] == [
+        assert str(board.tile_at(0, 0)) == "Mountains (10)"
+        assert board.tile_at(0, 0).neighbours == [None, board.tile_at(1, 0), board.tile_at(1, 1), board.tile_at(0, 1), None, None]
+        assert board.tile_at(0, 0).neighbours[1].neighbours[4] == board.tile_at(0, 0)
+        assert board.tile_at(1, 0).neighbours == [
+            None, 
+            board.tile_at(2, 0), 
+            board.tile_at(2, 1), 
+            board.tile_at(1, 1), 
+            board.tile_at(0, 0), 
+            None
+        ]
+        assert [str(i) for i in board.tile_at(3, 1).neighbours] == [
             "None", 
             "None", 
             "Mountains (8)", 
@@ -84,7 +91,7 @@ class TestClass:
             "Pasture (4)", 
             "Forest (9)"
         ]
-        assert [str(i) for i in board[1][1].neighbours] == [
+        assert [str(i) for i in board.tile_at(1, 1).neighbours] == [
             "Pasture (2)", 
             "Pasture (4)", 
             "Desert (0)", 
@@ -92,8 +99,8 @@ class TestClass:
             "Fields (12)", 
             "Mountains (10)"
         ]
-        assert [i.number for i in board[2][2].neighbours] == [4, 3, 4, 3, 11, 6]
-        assert [str(i) for i in board[3][0].neighbours] == [
+        assert [i.number for i in board.tile_at(2, 2).neighbours] == [4, 3, 4, 3, 11, 6]
+        assert [str(i) for i in board.tile_at(0, 3).neighbours] == [
             "Forest (11)", 
             "Mountains (3)", 
             "Hills (5)", 
@@ -101,8 +108,8 @@ class TestClass:
             "None", 
             "Fields (9)"
         ]
-        assert [i.number for i in board[3][2].neighbours] == [3, 5, 11, 6, 3, 0]
-        assert [str(i) for i in board[3][3].neighbours] == [
+        assert [i.number for i in board.tile_at(2, 3).neighbours] == [3, 5, 11, 6, 3, 0]
+        assert [str(i) for i in board.tile_at(3, 3).neighbours] == [
             "Mountains (8)", 
             "None", 
             "None", 
@@ -110,7 +117,7 @@ class TestClass:
             "Fields (4)", 
             "Forest (3)"
         ]
-        assert [str(i) for i in board[4][0].neighbours] == [
+        assert [str(i) for i in board.tile_at(0, 4).neighbours] == [
             "Mountains (3)", 
             "Fields (6)", 
             "None", 
@@ -118,7 +125,7 @@ class TestClass:
             "None", 
             "Forest (8)"
         ]
-        assert [str(i) for i in board[4][2].neighbours] == [
+        assert [str(i) for i in board.tile_at(2, 4).neighbours] == [
             "Pasture (5)", 
             "None", 
             "None", 
@@ -128,25 +135,25 @@ class TestClass:
         ]
 
     def test_board_construction_multiple_tiles(self):
-        board = Tile.create_board()
         player = Player("Alice")
-        settlement = SettlementOrCity(player, board[0][0], 2)
+        board = Board(player)
+        settlement = SettlementOrCity(player, board.tile_at(0, 0), 2)
         assert len(settlement.tiles) == 3
-        assert all(tile in settlement.tiles for tile in (board[0][0], board[0][1], board[1][1]))
-        assert board[0][1].construction_slots[4] is settlement
-        assert board[1][1].construction_slots[0] is settlement
-        settlement2 = SettlementOrCity(player, board[2][0], 4)
+        assert all(tile in settlement.tiles for tile in (board.tile_at(0, 0), board.tile_at(1, 0), board.tile_at(1, 1)))
+        assert board.tile_at(1, 0).construction_slots[4] is settlement
+        assert board.tile_at(1, 1).construction_slots[0] is settlement
+        settlement2 = SettlementOrCity(player, board.tile_at(0, 2), 4)
         assert len(settlement2.tiles) == 1
-        assert settlement2.tiles[0] is board[2][0]
-        settlement3 = SettlementOrCity(player, board[2][0], 0)
+        assert settlement2.tiles[0] is board.tile_at(0, 2)
+        settlement3 = SettlementOrCity(player, board.tile_at(0, 2), 0)
         assert len(settlement3.tiles) == 2
-        assert board[1][0].construction_slots[4] is settlement3
-        settlement4 = SettlementOrCity(player, board[4][0], 1)
+        assert board.tile_at(0, 1).construction_slots[4] is settlement3
+        settlement4 = SettlementOrCity(player, board.tile_at(0, 4), 1)
         assert len(settlement4.tiles) == 3
         tile_numbers = [tile.number for tile in settlement4.tiles]
         assert all(num in tile_numbers for num in (3, 5, 6))
         assert len(player.constructions) == 4
-        settlement5 = SettlementOrCity(player, board[2][4], 5)
+        settlement5 = SettlementOrCity(player, board.tile_at(4, 2), 5)
         assert len(settlement5.tiles) == 3
         tile_names = [str(tile) for tile in settlement5.tiles]
         assert all(name in tile_names for name in ("Hills (10)", "Forest (3)", "Mountains (8)"))
