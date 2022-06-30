@@ -134,6 +134,10 @@ class TestClass:
             "Fields (4)"
         ]
 
+    # TODO: how necessary is a reference to tiles on Construction anyway?
+    # Seems like it might be a pointless binding as the Player can already find
+    # all the tiles he owns using controlled_tiles. Might be removed soon, in which
+    # case this test should look at construction_slots instead of Construction.tiles
     def test_board_construction_multiple_tiles(self):
         player = Player("Alice")
         board = Board(player)
@@ -159,198 +163,191 @@ class TestClass:
         assert all(name in tile_names for name in ("Hills (10)", "Forest (3)", "Mountains (8)"))
 
     def test_harbours_on_created_board(self):
-        board = Tile.create_board()
+        board = Board()
         assert sum(1 for _ in (harbour for layer in board for tile in layer for harbour in tile.harbour_slots 
             if isinstance(harbour, Harbour))) == 24 # uses of harbour (by multiple tiles)
         assert len(set(harbour for layer in board for tile in layer for harbour in tile.harbour_slots 
             if isinstance(harbour, Harbour))) == 9 # harbour instances
-        assert len([slot for slot in board[0][0].harbour_slots if slot is not None]) == 2
-        assert str(board[0][0].harbour_slots[0]) == "General Harbour"
-        assert board[0][0].harbour_slots[0] is board[0][0].harbour_slots[5]
-        assert str(board[0][2].harbour_slots[2]) == "Ore Harbour"
-        assert board[0][2].harbour_slots[2] is board[1][3].harbour_slots[0]
+        assert len([slot for slot in board.tile_at(0, 0).harbour_slots if slot is not None]) == 2
+        assert str(board.tile_at(0, 0).harbour_slots[0]) == "General Harbour"
+        assert board.tile_at(0, 0).harbour_slots[0] is board.tile_at(0, 0).harbour_slots[5]
+        assert str(board.tile_at(2, 0).harbour_slots[2]) == "Ore Harbour"
+        assert board.tile_at(2, 0).harbour_slots[2] is board.tile_at(3, 1).harbour_slots[0]
 
     def test_player_owned_harbours(self):
-        board = Tile.create_board()
-        player = Player("Alice")
-        assert len(player.harbours) == 0
-        SettlementOrCity(player, board[0][0], 0)
-        assert player.harbours[0].rate == 3
-        SettlementOrCity(player, board[0][0], 4)
-        assert len(player.harbours) == 1
-        player2 = Player("Bob")
-        SettlementOrCity(player2, board[0][2], 4)
-        assert len(player2.harbours) == 0
-        SettlementOrCity(player2, board[0][2], 2)
-        assert player2.harbours[0].resource is Resource.Ore
-        SettlementOrCity(player2, board[4][2], 1)
-        assert len(player2.harbours) == 2
-        resources = set(harbour.resource for harbour in player2.harbours)
+        players = [Player("Alice"), Player("Bob"), Player("Charlie")]
+        board = Board(players)
+        assert len(players[0].harbours) == 0
+        SettlementOrCity(players[0], board.tile_at(0, 0), 0)
+        assert players[0].harbours[0].rate == 3
+        SettlementOrCity(players[0], board.tile_at(0, 0), 4)
+        assert len(players[0].harbours) == 1
+        SettlementOrCity(players[1], board.tile_at(2, 0), 4)
+        assert len(players[1].harbours) == 0
+        SettlementOrCity(players[1], board.tile_at(2, 0), 2)
+        assert players[1].harbours[0].resource is Resource.Ore
+        SettlementOrCity(players[1], board.tile_at(2, 4), 1)
+        assert len(players[1].harbours) == 2
+        resources = set(harbour.resource for harbour in players[1].harbours)
         assert Resource.Wool in resources
-        player3 = Player("Charlie")
-        SettlementOrCity(player3, board[4][0], 1)
-        SettlementOrCity(player2, board[4][0], 3)
-        assert board[4][0].harbour_slots[3].rate == 3
-        assert len(player3.harbours) == 0
+        SettlementOrCity(players[2], board.tile_at(0, 4), 1)
+        SettlementOrCity(players[1], board.tile_at(0, 4), 3)
+        assert board.tile_at(0, 4).harbour_slots[3].rate == 3
+        assert len(players[2].harbours) == 0
 
     def test_player_init_position_method(self):
-        board = Tile.create_board()
-        player1 = Player("Alice")
-        player1.init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (3, 2, 1)])
-        assert len(player1.constructions) == 2
-        assert len(player1.roads) == 2
-        assert len(player1.harbours) == 0
-        tile_types = set(tile.terrain for tile in player1.controlled_tiles)
+        players = [Player("Alice"), Player("Bob"), Player("Charlie"), Player("Dennis")]
+        board = Board(players)
+        players[0] = Player("Alice")
+        players[0].init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (3, 2, 1)])
+        assert len(players[0].constructions) == 2
+        assert len(players[0].roads) == 2
+        assert len(players[0].harbours) == 0
+        tile_types = set(tile.terrain for tile in players[0].controlled_tiles)
         assert all(terrain in tile_types for terrain in ("Forest", "Fields", "Hills", "Mountains", "Pasture"))
-        player2 = Player("Bob")
-        player2.init_position(board, [(2, 1, 1), (1, 4, 0)], [(2, 1, 0), (1, 4, 0)])
-        assert sum(1 for _ in (tile for tile in player2.controlled_tiles if tile.terrain == "Fields")) == 2
-        assert sum(1 for _ in (tile for tile in player2.controlled_tiles if tile.number == 4)) == 2
-        player3 = Player("Charlie")
-        player3.init_position(board, [(3, 3, 3)], [])
-        assert len(player3.constructions) == 1
-        assert len(player3.roads) == 0
-        assert len(player3.controlled_tiles) == 2
-        assert len(player3.occupied_tiles) == 2
-        assert len(player3.harbours) == 1
-        player4 = Player("Dennis")
+        players[1] = Player("Bob")
+        players[1].init_position(board, [(2, 1, 1), (1, 4, 0)], [(2, 1, 0), (1, 4, 0)])
+        assert sum(1 for _ in (tile for tile in players[1].controlled_tiles if tile.terrain == "Fields")) == 2
+        assert sum(1 for _ in (tile for tile in players[1].controlled_tiles if tile.number == 4)) == 2
+        players[2] = Player("Charlie")
+        players[2].init_position(board, [(3, 3, 3)], [])
+        assert len(players[2].constructions) == 1
+        assert len(players[2].roads) == 0
+        assert len(players[2].controlled_tiles) == 2
+        assert len(players[2].occupied_tiles) == 2
+        assert len(players[2].harbours) == 1
+        players[3] = Player("Dennis")
         try:
-            player4.init_position(board, [(3, 3, 3)], [])
+            players[3].init_position(board, [(3, 3, 3)], [])
             raise Exception("Not allowed")
         except AssertionError:
             pass
 
     def test_mirrored_road_slot(self):
-        board = Tile.create_board()
-        player1 = Player("Alice")
-        player1.init_position(board, [], [(0, 1, 2)])
-        assert board[1][0].road_slots[2] is not None
-        assert board[1][0].road_slots[2] is board[2][1].road_slots[5]
-        assert len(player1.occupied_tiles) == 2
-        assert len(player1.controlled_tiles) == 0
-        SettlementOrCity(player1, board[1][0], 3)
-        assert len(player1.occupied_tiles) == 3
-        assert len(player1.controlled_tiles) == 3
-        player2 = Player("Bob")
-        player2.init_position(board, [], [(0, 0, 0)])
-        assert len(player2.occupied_tiles) == 1
-        player3 = Player("Charlie")
-        player3.init_position(board, [], [(1, 0, 1)])
+        players = [Player("Alice"), Player("Bob"), Player("Charlie")]
+        board = Board(players)
+        players[0].init_position(board, [], [(0, 1, 2)])
+        assert board.tile_at(0, 1).road_slots[2] is not None
+        assert board.tile_at(0, 1).road_slots[2] is board.tile_at(1, 2).road_slots[5]
+        assert len(players[0].occupied_tiles) == 2
+        assert len(players[0].controlled_tiles) == 0
+        SettlementOrCity(players[0], board.tile_at(0, 1), 3)
+        assert len(players[0].occupied_tiles) == 3
+        assert len(players[0].controlled_tiles) == 3
+        players[1].init_position(board, [], [(0, 0, 0)])
+        assert len(players[1].occupied_tiles) == 1
+        players[2].init_position(board, [], [(1, 0, 1)])
         try:
-            Road(player3, board[0][2], 4)
+            Road(players[2], board.tile_at(2, 0), 4)
             raise Exception("This is the mirrored position of the road we placed")
         except AssertionError:
             pass
 
     def test_adjacent_roads_detection(self):
-        board = Tile.create_board()
-        player1 = Player("Alice")
-        player1.init_position(board, [], [(1, 1, 5)])
-        assert len(board[1][1].adjacent_roads(4)) == 1
-        assert len(board[1][1].adjacent_roads(5)) == 0
-        assert len(board[0][1].adjacent_roads(4)) == 1
-        assert len(board[0][1].adjacent_roads(3)) == 1
-        assert len(board[1][0].adjacent_roads(0)) == 1
-        assert len(board[0][0].adjacent_roads(3)) == 1
-        player2 = Player("Bob")
-        player2.init_position(board, [], [(2, 2, 5), (2, 1, 3)])
-        assert len(board[2][2].adjacent_roads(5)) == 1
-        assert len(board[1][1].adjacent_roads(2)) == 1
-        assert len(board[1][2].adjacent_roads(4)) == 2
-        player3 = Player("Charlie")
-        player3.init_position(board, [], [(1, 3, 0), (2, 3, 5), (1, 3, 2), (2, 3, 3), (2, 3, 4)])
-        assert len(board[3][1].adjacent_roads(1)) == 4
-        assert len(board[3][1].adjacent_roads(2)) == 2
+        players = [Player("Alice"), Player("Bob"), Player("Charlie")]
+        board = Board(players)
+        players[0].init_position(board, [], [(1, 1, 5)])
+        assert len(board.tile_at(1, 1).adjacent_roads(4)) == 1
+        assert len(board.tile_at(1, 1).adjacent_roads(5)) == 0
+        assert len(board.tile_at(1, 0).adjacent_roads(4)) == 1
+        assert len(board.tile_at(1, 0).adjacent_roads(3)) == 1
+        assert len(board.tile_at(0, 1).adjacent_roads(0)) == 1
+        assert len(board.tile_at(0, 0).adjacent_roads(3)) == 1
+        players[1].init_position(board, [], [(2, 2, 5), (2, 1, 3)])
+        assert len(board.tile_at(2, 2).adjacent_roads(5)) == 1
+        assert len(board.tile_at(1, 1).adjacent_roads(2)) == 1
+        assert len(board.tile_at(2, 1).adjacent_roads(4)) == 2
+        players[2].init_position(board, [], [(1, 3, 0), (2, 3, 5), (1, 3, 2), (2, 3, 3), (2, 3, 4)])
+        assert len(board.tile_at(1, 3).adjacent_roads(1)) == 4
+        assert len(board.tile_at(1, 3).adjacent_roads(2)) == 2
 
     def test_adjacent_settlements_detection(self):
-        board = Tile.create_board()
-        player1 = Player("Alice")
-        player1.init_position(board, [(1, 1, 4), (0, 0, 2)], [])
-        assert len(board[1][0].adjacent_settlements(1)) == 2
-        assert len(board[0][1].adjacent_settlements(3)) == 1
-        assert len(board[1][1].adjacent_settlements(2)) == 0
-        player2 = Player("Bob")
-        player2.init_position(board, [(1, 2, 2)], [])
-        assert len(board[2][1].adjacent_settlements(1)) == 2
-        adjacent_settlements = [str(s) for s in board[2][1].adjacent_settlements(1)]
+        players = [Player("Alice"), Player("Bob"), Player("Charlie")]
+        board = Board(players)
+        players[0] = Player("Alice")
+        players[0].init_position(board, [(1, 1, 4), (0, 0, 2)], [])
+        assert len(board.tile_at(0, 1).adjacent_settlements(1)) == 2
+        assert len(board.tile_at(1, 0).adjacent_settlements(3)) == 1
+        assert len(board.tile_at(1, 1).adjacent_settlements(2)) == 0
+        players[1] = Player("Bob")
+        players[1].init_position(board, [(1, 2, 2)], [])
+        assert len(board.tile_at(1, 2).adjacent_settlements(1)) == 2
+        adjacent_settlements = [str(s) for s in board.tile_at(1, 2).adjacent_settlements(1)]
         assert all(s in adjacent_settlements for s in ("Alice's Settlement", "Bob's Settlement"))
-        player3 = Player("Charlie")
-        player3.init_position(board, [(1, 1, 2)], [])
-        assert len(board[2][1].adjacent_settlements(1)) == 3
-        adjacent_settlements = set(str(s) for s in board[2][1].adjacent_settlements(1))
+        players[2] = Player("Charlie")
+        players[2].init_position(board, [(1, 1, 2)], [])
+        assert len(board.tile_at(1, 2).adjacent_settlements(1)) == 3
+        adjacent_settlements = set(str(s) for s in board.tile_at(1, 2).adjacent_settlements(1))
         assert len(adjacent_settlements) == 3
 
     def test_build_road_method(self):
-        board = Tile.create_board()
-        player1 = Player("Alice")
+        players = [Player("Alice"), Player("Bob")]
+        board = Board(players)
         for _ in range(6):
-            player1.resources.extend([
+            players[0].resources.extend([
                 Resource.Brick, 
                 Resource.Lumber, 
             ])
-        player1.init_position(board, [(0, 1, 2), (3, 2, 2)], [(3, 2, 1)])
-        player1.build("Road", board[1][0], 3)
-        player1.build("Road", board[1][0], 4)
-        player1.build("Road", board[2][0], 1)
-        player1.build("Road", board[2][4], 5)
-        player1.build("Road", board[2][1], 3)
+        players[0].init_position(board, [(0, 1, 2), (3, 2, 2)], [(3, 2, 1)])
+        players[0].build("Road", board.tile_at(0, 1), 3)
+        players[0].build("Road", board.tile_at(0, 1), 4)
+        players[0].build("Road", board.tile_at(0, 2), 1)
+        players[0].build("Road", board.tile_at(4, 2), 5)
+        players[0].build("Road", board.tile_at(1, 2), 3)
         try:
-            player1.build("Road", board[2][4], 1)
+            players[0].build("Road", board.tile_at(4, 2), 1)
             raise Exception("This road isn't connected to anything")
         except AssertionError:
             pass
-        player2 = Player("Bob")
-        player2.init_position(board, [(0, 4, 1)], [])
-        player2.resources.extend([Resource.Brick, Resource.Lumber])
+        players[1].init_position(board, [(0, 4, 1)], [])
+        players[1].resources.extend([Resource.Brick, Resource.Lumber])
         try:
-            player2.build("Road", board[2][4], 0)
+            players[1].build("Road", board.tile_at(4, 2), 0)
             raise Exception("Bob doesn't own the adjacent road")
         except AssertionError:
             pass
 
     def test_build_settlement_method(self):
-        board = Tile.create_board()
-        player1 = Player("Alice")
+        players = [Player("Alice"), Player("Bob"), Player("Charlie")]
+        board = Board(players)
         for _ in range(2):
-            player1.resources.extend([
+            players[0].resources.extend([
                 Resource.Brick,
                 Resource.Lumber,
                 Resource.Wool,
                 Resource.Grain
             ])
-        player1.init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (0, 1, 3), (3, 2, 1)])
-        player1.build("Settlement", board[1][0], 4)
+        players[0].init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (0, 1, 3), (3, 2, 1)])
+        players[0].build("Settlement", board.tile_at(0, 1), 4)
         try:
-            player1.build("Settlement", board[1][0], 3)
+            players[0].build("Settlement", board.tile_at(0, 1), 3)
             raise Exception("This is too close to existing settlements")
         except AssertionError:
             pass
-        player2 = Player("Bob")
-        player2.init_position(board, [(0, 0, 1)], [(0, 0, 1), (1, 1, 0)])
-        player2.resources.extend([
+        players[1].init_position(board, [(0, 0, 1)], [(0, 0, 1), (1, 1, 0)])
+        players[1].resources.extend([
                 Resource.Brick,
                 Resource.Lumber,
                 Resource.Wool,
                 Resource.Grain
         ])
-        player2.build("Settlement", board[1][1], 1)
-        player3 = Player("Charlie")
-        player3.init_position(board, [(2, 3, 3)], [(2, 3, 0), (2, 3, 1), (2, 3, 2)])
+        players[1].build("Settlement", board.tile_at(1, 1), 1)
+        players[2].init_position(board, [(2, 3, 3)], [(2, 3, 0), (2, 3, 1), (2, 3, 2)])
         for _ in range(2):
-            player3.resources.extend([
+            players[2].resources.extend([
                 Resource.Brick,
                 Resource.Lumber,
                 Resource.Wool,
                 Resource.Grain
             ])
         try:
-            player3.build("Settlement", board[3][2], 1)
+            players[2].build("Settlement", board.tile_at(2, 3), 1)
             raise Exception("Alice's settlement is too close")
         except AssertionError:
             pass
-        player3.build("Settlement", board[3][2], 0)
+        players[2].build("Settlement", board.tile_at(2, 3), 0)
         try:
-            player3.build("Settlement", board[4][2], 4)
+            players[2].build("Settlement", board.tile_at(2, 4), 4)
             raise Exception("There are no roads connecting this point")
         except AssertionError:
             pass

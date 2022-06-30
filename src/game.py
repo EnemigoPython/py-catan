@@ -48,14 +48,14 @@ class Player:
     def __repr__(self):
         return self.name
 
-    def init_position(self, board: List[List[Tile]], settlements: List[Tuple[int, int, int]], 
+    def init_position(self, board: Board, settlements: List[Tuple[int, int, int]], 
             roads: List[Tuple[int, int, int]]):
         """Choose starting locations from a global board of tiles"""
         for settlement in settlements:
-            board_location = board[settlement[1]][settlement[0]]
+            board_location = board.tile_at(settlement[0], settlement[1])
             SettlementOrCity(self, board_location, settlement[2])
         for road in roads:
-            board_location = board[road[1]][road[0]]
+            board_location = board.tile_at(road[0], road[1])
             Road(self, board_location, road[2])
 
     def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None):
