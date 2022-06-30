@@ -48,6 +48,7 @@ class Player:
     def __repr__(self):
         return self.name
 
+    # TODO: maybe move this to Board
     def init_position(self, board: Board, settlements: List[Tuple[int, int, int]], 
             roads: List[Tuple[int, int, int]]):
         """Choose starting locations from a global board of tiles"""
@@ -96,7 +97,7 @@ class Tile:
         "Pasture": Resource.Wool
     }
 
-    def __init__(self, terrain: str, number: int, neighbours: List[Tile|None] = None, 
+    def __init__(self, terrain: str, number: int, neighbours: List[Tile | None] = None, 
             harbours: List[Tuple[Harbour, int]] = None, has_robber=False):
         self.terrain = terrain
         self.number = number
