@@ -186,7 +186,7 @@ class TestClass:
         assert board[4][0].harbour_slots[3].rate == 3
         assert len(player3.harbours) == 0
 
-    def test_player_init_position(self):
+    def test_player_init_position_method(self):
         board = Tile.create_board()
         player1 = Player("Alice")
         player1.init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (3, 2, 1)])
@@ -301,7 +301,7 @@ class TestClass:
         except AssertionError:
             pass
 
-    def test_build_settlement(self):
+    def test_build_settlement_method(self):
         board = Tile.create_board()
         player1 = Player("Alice")
         for _ in range(2):

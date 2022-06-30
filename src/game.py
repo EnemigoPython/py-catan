@@ -331,7 +331,78 @@ class DevelopmentCard(Construction):
         pass
 
 class Board:
-    pass    # TODO: move create_board to __init__ here
-            # this should have tiles: List[List[Tile]
-            # and players: List[Player]
-            # and robber_tile: Tile 
+    """The board contains global state for Tile and Player objects"""
+    def __init__(self, players: List[Player] | None = None, config: dict | None = None):
+        self.players = players or []
+        _config = config or {}
+        harbours = _config.get("harbours") or [
+            Harbour(),
+            Harbour(Resource.Grain),
+            Harbour(Resource.Ore),
+            Harbour(Resource.Lumber),
+            Harbour(Resource.Brick),
+            Harbour(),
+            Harbour(Resource.Wool),
+            Harbour(),
+            Harbour()
+        ]
+        self.tiles: List[List[Tile]] = _config.get("Tiles") or [
+            [
+                Tile("Mountains", 10, harbours=[(harbours[0], 0), (harbours[0], 5)]),
+                Tile("Pasture", 2, harbours=[(harbours[1], 0), (harbours[1], 1)]),
+                Tile("Forest", 9, harbours=[(harbours[2], 2), (harbours[1], 5)])
+            ],
+            [
+                Tile("Fields", 12, harbours=[(harbours[3], 4), (harbours[3], 5)]),
+                Tile("Hills", 6),
+                Tile("Pasture", 4),
+                Tile("Hills", 10, harbours=[(harbours[2], 0), (harbours[2], 1)])
+            ],
+            [
+                Tile("Fields", 9, harbours=[(harbours[3], 0), (harbours[4], 3)]),
+                Tile("Forest", 11),
+                Tile("Desert", 0, has_robber=True),
+                Tile("Forest", 3),
+                Tile("Mountains", 8, harbours=[(harbours[5], 1), (harbours[5], 2)])
+            ],
+            [
+                Tile("Forest", 8, harbours=[(harbours[3], 4), (harbours[3], 5)]),
+                Tile("Mountains", 3),
+                Tile("Fields", 4),
+                Tile("Pasture", 5, harbours=[(harbours[6], 2), (harbours[6], 3)])
+            ],
+            [
+                Tile("Hills", 5, harbours=[(harbours[7], 3), (harbours[7], 4)]),
+                Tile("Fields", 6, harbours=[(harbours[8], 2), (harbours[8], 3)]),
+                Tile("Pasture", 11, harbours=[(harbours[6], 1), (harbours[8], 4)])
+            ]
+        ]
+
+        self.robber_tile = [tile for layer in self.tiles for tile in layer if tile.has_robber][0]
+
+        for e, layer in enumerate(self.tiles):
+            for f, tile in enumerate(layer):
+                if f + 1 < len(layer): # link horizontal neighbour
+                    east_tile = layer[f+1]
+                    tile.neighbours[1] = east_tile
+                    east_tile.neighbours[4] = tile
+                if e < 4: # link vertical neighbour(s)
+                    if e < 2:
+                        south_west_tile = self.tiles[e+1][f]
+                        tile.neighbours[3] = south_west_tile
+                        south_west_tile.neighbours[0] = tile
+                        south_east_tile = self.tiles[e+1][f+1]
+                        tile.neighbours[2] = south_east_tile
+                        south_east_tile.neighbours[5] = tile
+                    else:
+                        if f > 0:
+                            south_west_tile = self.tiles[e+1][f-1]
+                            tile.neighbours[3] = south_west_tile
+                            south_west_tile.neighbours[0] = tile
+                        if f + 1 < len(layer):
+                            south_east_tile = self.tiles[e+1][f]
+                            tile.neighbours[2] = south_east_tile
+                            south_east_tile.neighbours[5] = tile
+
+    def tile_at(self, x: int, y: int):
+        return self.tiles[y][x]        
