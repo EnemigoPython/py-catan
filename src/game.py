@@ -2,6 +2,7 @@
 from __future__ import annotations
 from enum import Enum, auto
 from typing import List, Set, Dict, Tuple, Generator
+from random import sample
 
 class Resource(Enum):
     """Used by players to build construction items"""
@@ -219,17 +220,48 @@ class SettlementOrCity(Construction):
 class DevelopmentCard(Construction):
     """Mystery card to give players an edge"""
 
-    def __init__(self, owner: Player, card_type: str, can_use=False):
+    def __init__(self, card_type: str, owner: Player | None = None, can_use=False):
         self.card_type = card_type
         self.can_use = can_use
         super().__init__("Development Card", owner)
+
+    @staticmethod
+    def default_card_stack():
+        return sample([
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("knight"),
+            DevelopmentCard("victory point"),
+            DevelopmentCard("victory point"),
+            DevelopmentCard("victory point"),
+            DevelopmentCard("victory point"),
+            DevelopmentCard("victory point"),
+            DevelopmentCard("road building"),
+            DevelopmentCard("road building"),
+            DevelopmentCard("year of plenty"),
+            DevelopmentCard("year of plenty"),
+            DevelopmentCard("monopoly"),
+            DevelopmentCard("monopoly")
+        ], k=25)
 
     def use_card(self, *args):
         card_fn_dict = {
             "knight": self.use_knight,
             "victory point": self.use_victory_point,
             "monopoly": self.use_monopoly,
-            "road building": self.use_road_building
+            "road building": self.use_road_building,
+            "year of plenty": self.use_year_of_plenty
         }
         card_fn_dict[self.card_type](args)
 
@@ -361,10 +393,11 @@ class Game:
     
     def __init__(self, config: dict | None = None):
         self.config = config or {}
-        self.board = Board(config.get("board"))
-        number_of_players = config.get("player_number") or 4
-        player_names = config.get("player_names") or self.default_names
+        self.board = Board(self.config.get("board"))
+        number_of_players = self.config.get("player_number") or 4
+        player_names = self.config.get("player_names") or self.default_names
         self.players = [Player(player_names[name]) for name in range(number_of_players)]
+        self.development_cards = self.config.get("development_cards") or DevelopmentCard.default_card_stack()
 
     def turn(self):
         pass

@@ -344,3 +344,6 @@ class TestClass:
             raise Exception("There are no roads connecting this point")
         except AssertionError as e:
             assert e.args[0] == 2
+
+    def test_create_game(self):
+        game = Game()
