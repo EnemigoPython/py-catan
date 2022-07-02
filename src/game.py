@@ -15,7 +15,7 @@ class Resource(Enum):
 class Player:
     """A player of the game of Catan"""
 
-    def __init__(self, name="Default"):
+    def __init__(self, name: str = "Default"):
         self.name = name
         self.resources: List[Resource] = []
         self.development_cards: List[DevelopmentCard] = []
@@ -57,9 +57,12 @@ class Player:
                 self.resources.remove(resource)
         match item:
             case "Road":
+                # TODO: this looks patently ridiculous and it's time to abstract it out to a function
                 assert any(settlement.owner is self 
                     for settlement in tile.adjacent_settlements(slot_idx)) or \
-                    any(road.owner is self for road in tile.adjacent_roads(slot_idx)), 1
+                    any(road.owner is self for road in tile.adjacent_roads(slot_idx)) or \
+                    (tile.construction_slots[slot_idx] is not None and tile.construction_slots[slot_idx].owner \
+                    is self), 1
                 Road(self, tile, slot_idx)
             case "Settlement":
                 assert any(road.owner is self for road in tile.adjacent_roads(slot_idx)), 2
@@ -71,6 +74,11 @@ class Player:
                 raise Exception("Cities must be upgraded from Settlements, not built directly")
             case _: 
                 raise Exception("Invalid item")
+
+    def use_card(self, development_card: DevelopmentCard, *args):
+        assert development_card in self.development_cards
+        development_card.use(*args)
+        self.development_cards.remove(development_card)
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -260,7 +268,7 @@ class DevelopmentCard(Construction):
             DevelopmentCard("monopoly")
         ], k=25)
 
-    def use_card(self, *args):
+    def use(self, *args):
         card_fn_dict = {
             "knight": self.use_knight,
             "victory point": self.use_victory_point,
@@ -268,7 +276,7 @@ class DevelopmentCard(Construction):
             "road building": self.use_road_building,
             "year of plenty": self.use_year_of_plenty
         }
-        card_fn_dict[self.card_type](args)
+        card_fn_dict[self.card_type](*args)
 
     def use_knight(self, board: Board, x: int, y: int):
         board.move_robber(x, y)
@@ -276,8 +284,10 @@ class DevelopmentCard(Construction):
     def use_victory_point(self):
         self.owner.victory_points += 1
 
-    def use_road_building(self, tiles: Tuple[Tile], slots: Tuple[int]):
+    def use_road_building(self, tiles: Tuple[Tile, Tile], slots: Tuple[int, int]):
         for tile, slot in zip(tiles, slots):
+            print(tile, slot)
+            print(tile.adjacent_settlements(1))
             self.owner.build("Road", tile, slot, costs_resources=False)
 
     def use_year_of_plenty(self, resources: Tuple[Resource, Resource]):

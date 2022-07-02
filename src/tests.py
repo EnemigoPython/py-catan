@@ -345,5 +345,28 @@ class TestClass:
         except AssertionError as e:
             assert e.args[0] == 2
 
+    def test_use_development_cards(self):
+        player = Player("Alice")
+        player.development_cards.append(DevelopmentCard("victory point", player, can_use=True))
+        player.development_cards.append(DevelopmentCard("year of plenty", player, can_use=True))
+        player.development_cards.append(DevelopmentCard("knight", player, can_use=True))
+        player.development_cards.append(DevelopmentCard("road building", player, can_use=True))
+        player.development_cards.append(DevelopmentCard("monopoly", player, can_use=True))
+        player.use_card(player.development_cards[0])
+        assert player.victory_points == 1
+        assert len(player.development_cards) == 4
+        player.use_card(player.development_cards[0], [Resource.Brick, Resource.Wool])
+        assert player.resources == [Resource.Brick, Resource.Wool]
+        board = Board()
+        assert board.tile_at(2, 2).has_robber
+        player.use_card(player.development_cards[0], board, 0, 0)
+        assert board.tile_at(0, 0).has_robber
+        assert not board.tile_at(2, 2).has_robber
+        board.init_player_position(player, [(0, 0, 1)], [])
+        print(board.tile_at(0, 0).construction_slots)
+        player.use_card(player.development_cards[0], (board.tile_at(0, 0), board.tile_at(0, 0)), (1, 2))
+        assert None not in board.tile_at(0, 0).road_slots[1:3] 
+
     def test_create_game(self):
         game = Game()
+        assert [player.name for player in game.players] == ["Alice", "Bob", "Charlie", "Dennis"]
