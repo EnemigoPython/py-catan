@@ -65,8 +65,6 @@ class Player:
                 SettlementOrCity(self, tile, slot_idx)
             case "Development Card": pass
             case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
-        # if not init_position:
-        #     for item in Construction.construction_dict[item]: self.resources.remove(item)
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -221,7 +219,7 @@ class SettlementOrCity(Construction):
 class DevelopmentCard(Construction):
     """Mystery card to give players an edge"""
 
-    def __init__(self, owner: Player, card_type: str, can_use: bool = False):
+    def __init__(self, owner: Player, card_type: str, can_use=False):
         self.card_type = card_type
         self.can_use = can_use
         super().__init__("Development Card", owner)
@@ -235,8 +233,8 @@ class DevelopmentCard(Construction):
         }
         card_fn_dict[self.card_type](args)
 
-    def use_knight(self):
-        pass
+    def use_knight(self, board: Board, x: int, y: int):
+        board.move_robber(x, y)
 
     def use_victory_point(self):
         self.owner.victory_points += 1
@@ -249,7 +247,9 @@ class DevelopmentCard(Construction):
         pass
 
     def use_monopoly(self, players: List[Player], resource: Resource):
-        pass
+        self.owner.resources.extend(res for player in players for res in player.resources if res == resource)
+        for player in players:
+            player.resources = [res for res in player.resources if res != resource]
 
 class Board:
     """The board represents the 2d playing space of Catan"""
@@ -343,6 +343,11 @@ class Board:
             board_location = self.tile_at(road[0], road[1])
             Road(player, board_location, road[2])
 
+    def move_robber(self, x, y):
+        assert self.tile_at(x, y) is not self.robber_tile
+        self.robber_tile.has_robber = False
+        self.tile_at(x, y).has_robber = True
+
 class Game:
     """Class to encapsulate all global state in a game of Catan"""
 
@@ -360,5 +365,8 @@ class Game:
         number_of_players = config.get("player_number") or 4
         player_names = config.get("player_names") or self.default_names
         self.players = [Player(player_names[name]) for name in range(number_of_players)]
+
+    def turn(self):
+        pass
 
     # TODO: repr is sorted player scores
