@@ -252,9 +252,8 @@ class DevelopmentCard(Construction):
         pass
 
 class Board:
-    """The board contains global state for Tile and Player objects"""
-    def __init__(self, players: List[Player] | None = None, config: dict | None = None):
-        self.players = players or []
+    """The board represents the 2d playing space of Catan"""
+    def __init__(self, config: dict | None = None):
         _config = config or {}
         harbours = _config.get("harbours") or [
             Harbour(),
@@ -343,3 +342,23 @@ class Board:
         for road in roads:
             board_location = self.tile_at(road[0], road[1])
             Road(player, board_location, road[2])
+
+class Game:
+    """Class to encapsulate all global state in a game of Catan"""
+
+    default_names = [
+        "Alice",
+        "Bob",
+        "Charlie",
+        "Dennis",
+        "Elaine",
+    ]
+    
+    def __init__(self, config: dict | None = None):
+        self.config = config or {}
+        self.board = Board(config.get("board"))
+        number_of_players = config.get("player_number") or 4
+        player_names = config.get("player_names") or self.default_names
+        self.players = [Player(player_names[name]) for name in range(number_of_players)]
+
+    # TODO: repr is sorted player scores

@@ -140,7 +140,7 @@ class TestClass:
     # case this test should look at construction_slots instead of Construction.tiles
     def test_board_construction_multiple_tiles(self):
         player = Player("Alice")
-        board = Board(player)
+        board = Board()
         settlement = SettlementOrCity(player, board.tile_at(0, 0), 2)
         assert len(settlement.tiles) == 3
         assert all(tile in settlement.tiles for tile in (board.tile_at(0, 0), board.tile_at(1, 0), board.tile_at(1, 1)))
@@ -176,7 +176,7 @@ class TestClass:
 
     def test_player_owned_harbours(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
-        board = Board(players)
+        board = Board()
         assert len(players[0].harbours) == 0
         SettlementOrCity(players[0], board.tile_at(0, 0), 0)
         assert players[0].harbours[0].rate == 3
@@ -197,7 +197,7 @@ class TestClass:
 
     def test_init_player_position_method(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie"), Player("Dennis")]
-        board = Board(players)
+        board = Board()
         board.init_player_position(players[0], [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (3, 2, 1)])
         assert len(players[0].constructions) == 2
         assert len(players[0].roads) == 2
@@ -221,7 +221,7 @@ class TestClass:
 
     def test_mirrored_road_slot(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
-        board = Board(players)
+        board = Board()
         board.init_player_position(players[0], [], [(0, 1, 2)])
         assert board.tile_at(0, 1).road_slots[2] is not None
         assert board.tile_at(0, 1).road_slots[2] is board.tile_at(1, 2).road_slots[5]
@@ -241,7 +241,7 @@ class TestClass:
 
     def test_adjacent_roads_detection(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
-        board = Board(players)
+        board = Board()
         board.init_player_position(players[0], [], [(1, 1, 5)])
         assert len(board.tile_at(1, 1).adjacent_roads(4)) == 1
         assert len(board.tile_at(1, 1).adjacent_roads(5)) == 0
@@ -259,7 +259,7 @@ class TestClass:
 
     def test_adjacent_settlements_detection(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
-        board = Board(players)
+        board = Board()
         board.init_player_position(players[0], [(1, 1, 4), (0, 0, 2)], [])
         assert len(board.tile_at(0, 1).adjacent_settlements(1)) == 2
         assert len(board.tile_at(1, 0).adjacent_settlements(3)) == 1
@@ -275,7 +275,7 @@ class TestClass:
 
     def test_build_road_method(self):
         players = [Player("Alice"), Player("Bob")]
-        board = Board(players)
+        board = Board()
         for _ in range(6):
             players[0].resources.extend([
                 Resource.Brick, 
@@ -302,7 +302,7 @@ class TestClass:
 
     def test_build_settlement_method(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
-        board = Board(players)
+        board = Board()
         for _ in range(2):
             players[0].resources.extend([
                 Resource.Brick,
