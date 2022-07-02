@@ -48,17 +48,6 @@ class Player:
     def __repr__(self):
         return self.name
 
-    # TODO: maybe move this to Board
-    def init_position(self, board: Board, settlements: List[Tuple[int, int, int]], 
-            roads: List[Tuple[int, int, int]]):
-        """Choose starting locations from a global board of tiles"""
-        for settlement in settlements:
-            board_location = board.tile_at(settlement[0], settlement[1])
-            SettlementOrCity(self, board_location, settlement[2])
-        for road in roads:
-            board_location = board.tile_at(road[0], road[1])
-            Road(self, board_location, road[2])
-
     def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None):
         assert Construction.has_resources_for(self, item)
         match item:
@@ -340,4 +329,14 @@ class Board:
         return len(self.tiles)
 
     def tile_at(self, x: int, y: int):
-        return self.tiles[y][x]        
+        return self.tiles[y][x]
+
+    def init_player_position(self, player: Player, settlements: List[Tuple[int, int, int]], 
+            roads: List[Tuple[int, int, int]]):
+        """Choose starting locations from a global board of tiles"""
+        for settlement in settlements:
+            board_location = self.tile_at(settlement[0], settlement[1])
+            SettlementOrCity(player, board_location, settlement[2])
+        for road in roads:
+            board_location = self.tile_at(road[0], road[1])
+            Road(player, board_location, road[2])

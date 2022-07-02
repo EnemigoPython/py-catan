@@ -195,30 +195,26 @@ class TestClass:
         assert board.tile_at(0, 4).harbour_slots[3].rate == 3
         assert len(players[2].harbours) == 0
 
-    def test_player_init_position_method(self):
+    def test_init_player_position_method(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie"), Player("Dennis")]
         board = Board(players)
-        players[0] = Player("Alice")
-        players[0].init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (3, 2, 1)])
+        board.init_player_position(players[0], [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (3, 2, 1)])
         assert len(players[0].constructions) == 2
         assert len(players[0].roads) == 2
         assert len(players[0].harbours) == 0
         tile_types = set(tile.terrain for tile in players[0].controlled_tiles)
         assert all(terrain in tile_types for terrain in ("Forest", "Fields", "Hills", "Mountains", "Pasture"))
-        players[1] = Player("Bob")
-        players[1].init_position(board, [(2, 1, 1), (1, 4, 0)], [(2, 1, 0), (1, 4, 0)])
+        board.init_player_position(players[1], [(2, 1, 1), (1, 4, 0)], [(2, 1, 0), (1, 4, 0)])
         assert sum(1 for _ in (tile for tile in players[1].controlled_tiles if tile.terrain == "Fields")) == 2
         assert sum(1 for _ in (tile for tile in players[1].controlled_tiles if tile.number == 4)) == 2
-        players[2] = Player("Charlie")
-        players[2].init_position(board, [(3, 3, 3)], [])
+        board.init_player_position(players[2], [(3, 3, 3)], [])
         assert len(players[2].constructions) == 1
         assert len(players[2].roads) == 0
         assert len(players[2].controlled_tiles) == 2
         assert len(players[2].occupied_tiles) == 2
         assert len(players[2].harbours) == 1
-        players[3] = Player("Dennis")
         try:
-            players[3].init_position(board, [(3, 3, 3)], [])
+            board.init_player_position(players[3], [(3, 3, 3)], [])
             raise Exception("Not allowed")
         except AssertionError:
             pass
@@ -226,7 +222,7 @@ class TestClass:
     def test_mirrored_road_slot(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
         board = Board(players)
-        players[0].init_position(board, [], [(0, 1, 2)])
+        board.init_player_position(players[0], [], [(0, 1, 2)])
         assert board.tile_at(0, 1).road_slots[2] is not None
         assert board.tile_at(0, 1).road_slots[2] is board.tile_at(1, 2).road_slots[5]
         assert len(players[0].occupied_tiles) == 2
@@ -234,9 +230,9 @@ class TestClass:
         SettlementOrCity(players[0], board.tile_at(0, 1), 3)
         assert len(players[0].occupied_tiles) == 3
         assert len(players[0].controlled_tiles) == 3
-        players[1].init_position(board, [], [(0, 0, 0)])
+        board.init_player_position(players[1], [], [(0, 0, 0)])
         assert len(players[1].occupied_tiles) == 1
-        players[2].init_position(board, [], [(1, 0, 1)])
+        board.init_player_position(players[2], [], [(1, 0, 1)])
         try:
             Road(players[2], board.tile_at(2, 0), 4)
             raise Exception("This is the mirrored position of the road we placed")
@@ -246,36 +242,33 @@ class TestClass:
     def test_adjacent_roads_detection(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
         board = Board(players)
-        players[0].init_position(board, [], [(1, 1, 5)])
+        board.init_player_position(players[0], [], [(1, 1, 5)])
         assert len(board.tile_at(1, 1).adjacent_roads(4)) == 1
         assert len(board.tile_at(1, 1).adjacent_roads(5)) == 0
         assert len(board.tile_at(1, 0).adjacent_roads(4)) == 1
         assert len(board.tile_at(1, 0).adjacent_roads(3)) == 1
         assert len(board.tile_at(0, 1).adjacent_roads(0)) == 1
         assert len(board.tile_at(0, 0).adjacent_roads(3)) == 1
-        players[1].init_position(board, [], [(2, 2, 5), (2, 1, 3)])
+        board.init_player_position(players[1], [], [(2, 2, 5), (2, 1, 3)])
         assert len(board.tile_at(2, 2).adjacent_roads(5)) == 1
         assert len(board.tile_at(1, 1).adjacent_roads(2)) == 1
         assert len(board.tile_at(2, 1).adjacent_roads(4)) == 2
-        players[2].init_position(board, [], [(1, 3, 0), (2, 3, 5), (1, 3, 2), (2, 3, 3), (2, 3, 4)])
+        board.init_player_position(players[2], [], [(1, 3, 0), (2, 3, 5), (1, 3, 2), (2, 3, 3), (2, 3, 4)])
         assert len(board.tile_at(1, 3).adjacent_roads(1)) == 4
         assert len(board.tile_at(1, 3).adjacent_roads(2)) == 2
 
     def test_adjacent_settlements_detection(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
         board = Board(players)
-        players[0] = Player("Alice")
-        players[0].init_position(board, [(1, 1, 4), (0, 0, 2)], [])
+        board.init_player_position(players[0], [(1, 1, 4), (0, 0, 2)], [])
         assert len(board.tile_at(0, 1).adjacent_settlements(1)) == 2
         assert len(board.tile_at(1, 0).adjacent_settlements(3)) == 1
         assert len(board.tile_at(1, 1).adjacent_settlements(2)) == 0
-        players[1] = Player("Bob")
-        players[1].init_position(board, [(1, 2, 2)], [])
+        board.init_player_position(players[1], [(1, 2, 2)], [])
         assert len(board.tile_at(1, 2).adjacent_settlements(1)) == 2
         adjacent_settlements = [str(s) for s in board.tile_at(1, 2).adjacent_settlements(1)]
         assert all(s in adjacent_settlements for s in ("Alice's Settlement", "Bob's Settlement"))
-        players[2] = Player("Charlie")
-        players[2].init_position(board, [(1, 1, 2)], [])
+        board.init_player_position(players[2], [(1, 1, 2)], [])
         assert len(board.tile_at(1, 2).adjacent_settlements(1)) == 3
         adjacent_settlements = set(str(s) for s in board.tile_at(1, 2).adjacent_settlements(1))
         assert len(adjacent_settlements) == 3
@@ -288,7 +281,7 @@ class TestClass:
                 Resource.Brick, 
                 Resource.Lumber, 
             ])
-        players[0].init_position(board, [(0, 1, 2), (3, 2, 2)], [(3, 2, 1)])
+        board.init_player_position(players[0], [(0, 1, 2), (3, 2, 2)], [(3, 2, 1)])
         players[0].build("Road", board.tile_at(0, 1), 3)
         players[0].build("Road", board.tile_at(0, 1), 4)
         players[0].build("Road", board.tile_at(0, 2), 1)
@@ -299,7 +292,7 @@ class TestClass:
             raise Exception("This road isn't connected to anything")
         except AssertionError:
             pass
-        players[1].init_position(board, [(0, 4, 1)], [])
+        board.init_player_position(players[1], [(0, 4, 1)], [])
         players[1].resources.extend([Resource.Brick, Resource.Lumber])
         try:
             players[1].build("Road", board.tile_at(4, 2), 0)
@@ -317,14 +310,14 @@ class TestClass:
                 Resource.Wool,
                 Resource.Grain
             ])
-        players[0].init_position(board, [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (0, 1, 3), (3, 2, 1)])
+        board.init_player_position(players[0], [(0, 1, 2), (3, 2, 2)], [(0, 1, 2), (0, 1, 3), (3, 2, 1)])
         players[0].build("Settlement", board.tile_at(0, 1), 4)
         try:
             players[0].build("Settlement", board.tile_at(0, 1), 3)
             raise Exception("This is too close to existing settlements")
         except AssertionError:
             pass
-        players[1].init_position(board, [(0, 0, 1)], [(0, 0, 1), (1, 1, 0)])
+        board.init_player_position(players[1], [(0, 0, 1)], [(0, 0, 1), (1, 1, 0)])
         players[1].resources.extend([
                 Resource.Brick,
                 Resource.Lumber,
@@ -332,7 +325,7 @@ class TestClass:
                 Resource.Grain
         ])
         players[1].build("Settlement", board.tile_at(1, 1), 1)
-        players[2].init_position(board, [(2, 3, 3)], [(2, 3, 0), (2, 3, 1), (2, 3, 2)])
+        board.init_player_position(players[2], [(2, 3, 3)], [(2, 3, 0), (2, 3, 1), (2, 3, 2)])
         for _ in range(2):
             players[2].resources.extend([
                 Resource.Brick,
