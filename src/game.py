@@ -2,7 +2,7 @@
 from __future__ import annotations
 from enum import Enum, auto
 from typing import List, Set, Dict, Tuple, Generator
-from random import sample, randint
+from random import choice, sample, randint
 
 class Resource(Enum):
     """Used by players to build construction items"""
@@ -79,6 +79,13 @@ class Player:
         assert development_card in self.development_cards
         development_card.use(*args)
         self.development_cards.remove(development_card)
+
+    def steal_random_resource(self, victim: Player):
+        if len(victim.resources) == 0:
+            return
+        random_resource = choice(victim.resources)
+        self.resources.append(random_resource)
+        victim.resources.remove(random_resource)
 
 class Harbour:
     """A trading port that can be used for better deals"""
