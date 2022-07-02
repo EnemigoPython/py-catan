@@ -290,15 +290,15 @@ class TestClass:
         try:
             players[0].build("Road", board.tile_at(4, 2), 1)
             raise Exception("This road isn't connected to anything")
-        except AssertionError:
-            pass
+        except AssertionError as e:
+            assert e.args[0] == 1
         board.init_player_position(players[1], [(0, 4, 1)], [])
         players[1].resources.extend([Resource.Brick, Resource.Lumber])
         try:
             players[1].build("Road", board.tile_at(4, 2), 0)
             raise Exception("Bob doesn't own the adjacent road")
-        except AssertionError:
-            pass
+        except AssertionError as e:
+            assert e.args[0] == 1
 
     def test_build_settlement_method(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
@@ -315,8 +315,8 @@ class TestClass:
         try:
             players[0].build("Settlement", board.tile_at(0, 1), 3)
             raise Exception("This is too close to existing settlements")
-        except AssertionError:
-            pass
+        except AssertionError as e:
+            assert e.args[0] == 3
         board.init_player_position(players[1], [(0, 0, 1)], [(0, 0, 1), (1, 1, 0)])
         players[1].resources.extend([
                 Resource.Brick,
@@ -326,7 +326,7 @@ class TestClass:
         ])
         players[1].build("Settlement", board.tile_at(1, 1), 1)
         board.init_player_position(players[2], [(2, 3, 3)], [(2, 3, 0), (2, 3, 1), (2, 3, 2)])
-        for _ in range(2):
+        for _ in range(3):
             players[2].resources.extend([
                 Resource.Brick,
                 Resource.Lumber,
@@ -336,11 +336,11 @@ class TestClass:
         try:
             players[2].build("Settlement", board.tile_at(2, 3), 1)
             raise Exception("Alice's settlement is too close")
-        except AssertionError:
-            pass
+        except AssertionError as e:
+            assert e.args[0] == 3
         players[2].build("Settlement", board.tile_at(2, 3), 0)
         try:
-            players[2].build("Settlement", board.tile_at(2, 4), 4)
+            players[2].build("Settlement", board.tile_at(2, 4), 3)
             raise Exception("There are no roads connecting this point")
-        except AssertionError:
-            pass
+        except AssertionError as e:
+            assert e.args[0] == 2

@@ -48,21 +48,25 @@ class Player:
     def __repr__(self):
         return self.name
 
-    def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None):
-        assert Construction.has_resources_for(self, item)
+    def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None, init_position=False):
+        if not init_position:
+            assert Construction.has_resources_for(self, item), 0
+            for resource in Construction.construction_dict[item]: 
+                self.resources.remove(resource)
         match item:
             case "Road":
                 assert any(settlement.owner is self 
                     for settlement in tile.adjacent_settlements(slot_idx)) or \
-                    any(road.owner is self for road in tile.adjacent_roads(slot_idx))
+                    any(road.owner is self for road in tile.adjacent_roads(slot_idx)), 1
                 Road(self, tile, slot_idx)
             case "Settlement":
-                assert any(road.owner is self for road in tile.adjacent_roads(slot_idx))
-                assert not tile.adjacent_settlements(slot_idx)
+                assert any(road.owner is self for road in tile.adjacent_roads(slot_idx)), 2
+                assert not tile.adjacent_settlements(slot_idx), 3
                 SettlementOrCity(self, tile, slot_idx)
             case "Development Card": pass
             case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
-        for item in Construction.construction_dict[item]: self.resources.remove(item)
+        # if not init_position:
+        #     for item in Construction.construction_dict[item]: self.resources.remove(item)
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -193,7 +197,6 @@ class Road(Construction):
         opposite_tile = tile.neighbours[slot_idx]
         if opposite_tile is not None: # create mirror reference on opposite tile
             inverted_slot_idx = (slot_idx + 3) % 6
-            assert opposite_tile.road_slots[inverted_slot_idx] is None
             opposite_tile.road_slots[inverted_slot_idx] = self
             self.owner.occupied_tiles.add(opposite_tile)
 
