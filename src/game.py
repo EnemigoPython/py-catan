@@ -2,7 +2,7 @@
 from __future__ import annotations
 from enum import Enum, auto
 from typing import List, Set, Dict, Tuple, Generator
-from random import sample
+from random import sample, randint
 
 class Resource(Enum):
     """Used by players to build construction items"""
@@ -49,8 +49,9 @@ class Player:
     def __repr__(self):
         return self.name
 
-    def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None, init_position=False):
-        if not init_position:
+    def build(self, item: str, tile: Tile | None = None, slot_idx: int | None = None, 
+        stack: List[DevelopmentCard] | None = None, costs_resources=True):
+        if costs_resources:
             assert Construction.has_resources_for(self, item), 0
             for resource in Construction.construction_dict[item]: 
                 self.resources.remove(resource)
@@ -64,8 +65,12 @@ class Player:
                 assert any(road.owner is self for road in tile.adjacent_roads(slot_idx)), 2
                 assert not tile.adjacent_settlements(slot_idx), 3
                 SettlementOrCity(self, tile, slot_idx)
-            case "Development Card": pass
-            case "City": raise Exception("Cities must be upgraded from Settlements, not built directly")
+            case "Development Card": 
+                self.development_cards.append(stack.pop())
+            case "City": 
+                raise Exception("Cities must be upgraded from Settlements, not built directly")
+            case _: 
+                raise Exception("Invalid item")
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -273,10 +278,10 @@ class DevelopmentCard(Construction):
 
     def use_road_building(self, tiles: Tuple[Tile], slots: Tuple[int]):
         for tile, slot in zip(tiles, slots):
-            self.owner.build("Road", tile, slot)
+            self.owner.build("Road", tile, slot, costs_resources=False)
 
-    def use_year_of_plenty(self):
-        pass
+    def use_year_of_plenty(self, resources: Tuple[Resource, Resource]):
+        self.owner.resources.extend(resources)
 
     def use_monopoly(self, players: List[Player], resource: Resource):
         self.owner.resources.extend(res for player in players for res in player.resources if res == resource)
@@ -370,15 +375,18 @@ class Board:
         """Choose starting locations from a global board of tiles"""
         for settlement in settlements:
             board_location = self.tile_at(settlement[0], settlement[1])
+            assert not board_location.adjacent_settlements(settlement[2])
             SettlementOrCity(player, board_location, settlement[2])
         for road in roads:
             board_location = self.tile_at(road[0], road[1])
             Road(player, board_location, road[2])
 
     def move_robber(self, x, y):
-        assert self.tile_at(x, y) is not self.robber_tile
+        tile = self.tile_at(x, y)
+        assert tile is not self.robber_tile
         self.robber_tile.has_robber = False
-        self.tile_at(x, y).has_robber = True
+        tile.has_robber = True
+        self.robber_tile = tile
 
 class Game:
     """Class to encapsulate all global state in a game of Catan"""
@@ -388,7 +396,7 @@ class Game:
         "Bob",
         "Charlie",
         "Dennis",
-        "Elaine",
+        "Elaine"
     ]
     
     def __init__(self, config: dict | None = None):
@@ -398,6 +406,10 @@ class Game:
         player_names = self.config.get("player_names") or self.default_names
         self.players = [Player(player_names[name]) for name in range(number_of_players)]
         self.development_cards = self.config.get("development_cards") or DevelopmentCard.default_card_stack()
+
+    @staticmethod
+    def dice_roll():
+        return randint(1, 6) + randint(1, 6)
 
     def turn(self):
         pass
