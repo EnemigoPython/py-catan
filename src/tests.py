@@ -276,12 +276,13 @@ class TestClass:
     def test_build_road_method(self):
         players = [Player("Alice"), Player("Bob")]
         board = Board()
-        for _ in range(6):
+        for _ in range(7):
             players[0].resources.extend([
                 Resource.Brick, 
                 Resource.Lumber, 
             ])
         board.init_player_position(players[0], [(0, 1, 2), (3, 2, 2)], [(3, 2, 1)])
+        players[0].build("Road", board.tile_at(0, 1), 2)
         players[0].build("Road", board.tile_at(0, 1), 3)
         players[0].build("Road", board.tile_at(0, 1), 4)
         players[0].build("Road", board.tile_at(0, 2), 1)
@@ -346,26 +347,30 @@ class TestClass:
             assert e.args[0] == 2
 
     def test_use_development_cards(self):
-        player = Player("Alice")
-        player.development_cards.append(DevelopmentCard("victory point", player, can_use=True))
-        player.development_cards.append(DevelopmentCard("year of plenty", player, can_use=True))
-        player.development_cards.append(DevelopmentCard("knight", player, can_use=True))
-        player.development_cards.append(DevelopmentCard("road building", player, can_use=True))
-        player.development_cards.append(DevelopmentCard("monopoly", player, can_use=True))
-        player.use_card(player.development_cards[0])
-        assert player.victory_points == 1
-        assert len(player.development_cards) == 4
-        player.use_card(player.development_cards[0], [Resource.Brick, Resource.Wool])
-        assert player.resources == [Resource.Brick, Resource.Wool]
+        players = [Player("Alice"), Player("Bob")]
+        players[0].development_cards.append(DevelopmentCard("victory point", players[0], can_use=True))
+        players[0].development_cards.append(DevelopmentCard("year of plenty", players[0], can_use=True))
+        players[0].development_cards.append(DevelopmentCard("knight", players[0], can_use=True))
+        players[0].development_cards.append(DevelopmentCard("road building", players[0], can_use=True))
+        players[0].development_cards.append(DevelopmentCard("monopoly", players[0], can_use=True))
+        players[0].use_card(players[0].development_cards[0])
+        assert players[0].victory_points == 1
+        assert len(players[0].development_cards) == 4
+        players[0].use_card(players[0].development_cards[0], [Resource.Grain, Resource.Wool])
+        assert players[0].resources == [Resource.Grain, Resource.Wool]
         board = Board()
         assert board.tile_at(2, 2).has_robber
-        player.use_card(player.development_cards[0], board, 0, 0)
+        players[0].use_card(players[0].development_cards[0], board, 0, 0)
         assert board.tile_at(0, 0).has_robber
         assert not board.tile_at(2, 2).has_robber
-        board.init_player_position(player, [(0, 0, 1)], [])
-        print(board.tile_at(0, 0).construction_slots)
-        player.use_card(player.development_cards[0], (board.tile_at(0, 0), board.tile_at(0, 0)), (1, 2))
-        assert None not in board.tile_at(0, 0).road_slots[1:3] 
+        board.init_player_position(players[0], [(0, 0, 1)], [])
+        players[0].use_card(players[0].development_cards[0], (board.tile_at(0, 0), board.tile_at(0, 0)), (1, 2))
+        assert None not in board.tile_at(0, 0).road_slots[1:3]
+        board.init_player_position(players[1], [(1, 1, 4)], [])
+        players[1].resources = [Resource.Brick, Resource.Brick, Resource.Wool]
+        players[0].use_card(players[0].development_cards[0], [players[1]], Resource.Brick)
+        assert Resource.Brick not in players[1].resources
+        assert players[0].resources.count(Resource.Brick) == 2
 
     def test_create_game(self):
         game = Game()
