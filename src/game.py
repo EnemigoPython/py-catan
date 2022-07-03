@@ -93,6 +93,14 @@ class Player:
     def collect_resources(self, number: int):
         self.resources.extend(tile.resource for tile in self.controlled_tiles if tile.check_proc(number))
 
+    def check_longest_road(self):
+        longest = 0
+        checked_roads: List[Road] = []
+        
+        def recurse_roads(current: int):
+            if all(road in checked_roads for road in self.roads):
+                return longest
+
 class Harbour:
     """A trading port that can be used for better deals"""
     
@@ -435,15 +443,30 @@ class Game:
         self.players = [Player(player_names[name]) for name in range(number_of_players)]
         self.current_actor = self.players[0]
         self.development_cards = self.config.get("development_cards") or DevelopmentCard.default_card_stack()
+        self.largest_army: Player | None = None
+        self.longest_road: Player | None = None
+
+    def __repr__(self):
+        sorted_players = sorted(self.players, key=lambda x: x.victory_points, reverse=True)
+        return ", ".join(f"{player}: {player.victory_points}" for player in sorted_players)
 
     @staticmethod
     def dice_roll():
         return randint(1, 6) + randint(1, 6)
 
+    def check_largest_army(self):
+        to_beat = self.largest_army.victory_points if self.largest_army is not None else 2
+        if self.current_actor.army_count > to_beat:
+            if self.largest_army is not None:
+                self.largest_army.victory_points -= 2
+            self.current_actor.victory_points += 2
+            self.largest_army = self.current_actor
+
+    def check_longest_road(self):
+        # to_beat = 
+        pass
+
     def next_turn(self):
 
         actor_idx = self.players.index(self.current_actor)
 
-    def __repr__(self):
-        sorted_players = sorted(self.players, key=lambda x: x.victory_points, reverse=True)
-        return ", ".join(f"{player}: {player.victory_points}" for player in sorted_players)
