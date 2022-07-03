@@ -90,6 +90,9 @@ class Player:
         self.resources.append(random_resource)
         victim.resources.remove(random_resource)
 
+    def collect_resources(self, number: int):
+        self.resources.extend(tile.resource for tile in self.controlled_tiles if tile.check_proc(number))
+
 class Harbour:
     """A trading port that can be used for better deals"""
     
@@ -159,7 +162,7 @@ class Tile:
             if tile is not None and tile.construction_slots[idx-1] is not None]
 
     def check_proc(self, number: int):
-        return self.resource if number == self.number and not self.has_robber else None
+        return number == self.number and not self.has_robber
 
     @staticmethod
     def slot_idx_gen(tiles: List[Tile | None], slot_idx: int) -> Generator[Tuple[Tile | None, int]]:
@@ -438,6 +441,7 @@ class Game:
         return randint(1, 6) + randint(1, 6)
 
     def next_turn(self):
+
         actor_idx = self.players.index(self.current_actor)
 
     def __repr__(self):
