@@ -4,8 +4,8 @@ from game import *
 class TestClass:
     def test_resources(self):
         tile = Tile("Hills", 3)
-        assert tile.check_proc(5) is None
-        assert tile.check_proc(3) is Resource.Brick
+        assert not tile.check_proc(5)
+        assert tile.check_proc(3)
 
     def test_construction(self):
         road = Construction("Road", owner=Player())

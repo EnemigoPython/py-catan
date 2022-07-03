@@ -94,10 +94,9 @@ class Player:
         self.resources.extend(tile.resource for tile in self.controlled_tiles if tile.check_proc(number))
 
     def check_longest_road(self):
-        longest = 0
         checked_roads: List[Road] = []
-        
-        def recurse_roads(current: int):
+
+        def recurse_roads(current: int, longest: int):
             if all(road in checked_roads for road in self.roads):
                 return longest
 
