@@ -77,8 +77,10 @@ class Player:
 
     def use_card(self, development_card: DevelopmentCard, *args):
         assert development_card in self.development_cards
-        development_card.use(*args)
+        return_val = development_card.use(*args)
         self.development_cards.remove(development_card)
+        if return_val:
+            return return_val
 
     def steal_random_resource(self, victim: Player):
         if len(victim.resources) == 0:
@@ -275,7 +277,8 @@ class DevelopmentCard(Construction):
             DevelopmentCard("monopoly")
         ], k=25)
 
-    def use(self, *args):
+    def use(self, *args) -> List[Player] | None:
+        assert self.can_use
         card_fn_dict = {
             "knight": self.use_knight,
             "victory point": self.use_victory_point,
@@ -283,18 +286,19 @@ class DevelopmentCard(Construction):
             "road building": self.use_road_building,
             "year of plenty": self.use_year_of_plenty
         }
-        card_fn_dict[self.card_type](*args)
+        return_val = card_fn_dict[self.card_type](*args)
+        if return_val:
+            return return_val
 
     def use_knight(self, board: Board, x: int, y: int):
-        board.move_robber(x, y)
+        target_players = board.move_robber(self.owner, x, y)
+        return target_players
 
     def use_victory_point(self):
         self.owner.victory_points += 1
 
     def use_road_building(self, tiles: Tuple[Tile, Tile], slots: Tuple[int, int]):
         for tile, slot in zip(tiles, slots):
-            print(tile, slot)
-            print(tile.adjacent_settlements(1))
             self.owner.build("Road", tile, slot, costs_resources=False)
 
     def use_year_of_plenty(self, resources: Tuple[Resource, Resource]):
@@ -398,12 +402,13 @@ class Board:
             board_location = self.tile_at(road[0], road[1])
             Road(player, board_location, road[2])
 
-    def move_robber(self, x, y):
+    def move_robber(self, player: Player, x: int, y: int):
         tile = self.tile_at(x, y)
         assert tile is not self.robber_tile
         self.robber_tile.has_robber = False
         tile.has_robber = True
         self.robber_tile = tile
+        return list(set(slot.owner for slot in tile.construction_slots if slot is not None and slot.owner is not player))
 
 class Game:
     """Class to encapsulate all global state in a game of Catan"""

@@ -359,18 +359,21 @@ class TestClass:
         players[0].use_card(players[0].development_cards[0], [Resource.Grain, Resource.Wool])
         assert players[0].resources == [Resource.Grain, Resource.Wool]
         board = Board()
-        assert board.tile_at(2, 2).has_robber
-        players[0].use_card(players[0].development_cards[0], board, 0, 0)
-        assert board.tile_at(0, 0).has_robber
-        assert not board.tile_at(2, 2).has_robber
         board.init_player_position(players[0], [(0, 0, 1)], [])
+        board.init_player_position(players[1], [(1, 1, 4)], [])
+        players[1].resources = [Resource.Brick, Resource.Brick, Resource.Brick, Resource.Wool]
+        assert board.tile_at(2, 2).has_robber
+        potential_targets = players[0].use_card(players[0].development_cards[0], board, 1, 1)
+        assert potential_targets is not None
+        assert board.tile_at(1, 1).has_robber
+        assert not board.tile_at(2, 2).has_robber
+        players[0].steal_random_resource(potential_targets[0])
+        assert len(players[1].resources) == 3
         players[0].use_card(players[0].development_cards[0], (board.tile_at(0, 0), board.tile_at(0, 0)), (1, 2))
         assert None not in board.tile_at(0, 0).road_slots[1:3]
-        board.init_player_position(players[1], [(1, 1, 4)], [])
-        players[1].resources = [Resource.Brick, Resource.Brick, Resource.Wool]
         players[0].use_card(players[0].development_cards[0], [players[1]], Resource.Brick)
         assert Resource.Brick not in players[1].resources
-        assert players[0].resources.count(Resource.Brick) == 2
+        assert players[0].resources.count(Resource.Brick) == 3
 
     def test_create_game(self):
         game = Game()
