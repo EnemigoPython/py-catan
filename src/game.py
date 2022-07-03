@@ -21,6 +21,7 @@ class Player:
         self.development_cards: List[DevelopmentCard] = []
         self.occupied_tiles: Set[Tile] = set()
         self.victory_points = 0
+        self.army_count = 0
 
     @property
     def controlled_tiles(self):
@@ -291,6 +292,7 @@ class DevelopmentCard(Construction):
             return return_val
 
     def use_knight(self, board: Board, x: int, y: int):
+        self.owner.army_count += 1
         target_players = board.move_robber(self.owner, x, y)
         return target_players
 
@@ -422,18 +424,22 @@ class Game:
     ]
     
     def __init__(self, config: dict | None = None):
+        self.round = 1
         self.config = config or {}
         self.board = Board(self.config.get("board"))
         number_of_players = self.config.get("player_number") or 4
         player_names = self.config.get("player_names") or self.default_names
         self.players = [Player(player_names[name]) for name in range(number_of_players)]
+        self.current_actor = self.players[0]
         self.development_cards = self.config.get("development_cards") or DevelopmentCard.default_card_stack()
 
     @staticmethod
     def dice_roll():
         return randint(1, 6) + randint(1, 6)
 
-    def turn(self):
-        pass
+    def next_turn(self):
+        actor_idx = self.players.index(self.current_actor)
 
-    # TODO: repr is sorted player scores
+    def __repr__(self):
+        sorted_players = sorted(self.players, key=lambda x: x.victory_points, reverse=True)
+        return ", ".join(f"{player}: {player.victory_points}" for player in sorted_players)

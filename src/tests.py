@@ -359,12 +359,12 @@ class TestClass:
         players[0].use_card(players[0].development_cards[0], [Resource.Grain, Resource.Wool])
         assert players[0].resources == [Resource.Grain, Resource.Wool]
         board = Board()
-        board.init_player_position(players[0], [(0, 0, 1)], [])
+        board.init_player_position(players[0], [(0, 0, 1), (1, 1, 1)], [])
         board.init_player_position(players[1], [(1, 1, 4)], [])
         players[1].resources = [Resource.Brick, Resource.Brick, Resource.Brick, Resource.Wool]
         assert board.tile_at(2, 2).has_robber
         potential_targets = players[0].use_card(players[0].development_cards[0], board, 1, 1)
-        assert potential_targets is not None
+        assert len(potential_targets) == 1
         assert board.tile_at(1, 1).has_robber
         assert not board.tile_at(2, 2).has_robber
         players[0].steal_random_resource(potential_targets[0])
@@ -378,3 +378,6 @@ class TestClass:
     def test_create_game(self):
         game = Game()
         assert [player.name for player in game.players] == ["Alice", "Bob", "Charlie", "Dennis"]
+        game.players[1].victory_points = 5
+        game.players[3].victory_points = 3
+        assert str(game) == "Bob: 5, Dennis: 3, Alice: 0, Charlie: 0"
