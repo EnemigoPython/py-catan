@@ -94,15 +94,23 @@ class Player:
         self.resources.extend(tile.resource for tile in self.controlled_tiles if tile.check_proc(number))
 
     def check_longest_road(self):
+        longest = 0
         checked_roads: List[Road] = []
 
-        def recurse_roads(current_road: Road, current_length: int, longest: int):
+        def recurse_road_segment(current_road: Road, current_length: int):
             current_length += 1
-            paths = [road for road in Tile.adjacent_roads(current_road.locator[1])]
-            if all(road in checked_roads for road in self.roads):
-                return longest
+            checked_roads.append(current_road)
+            paths = [road for road in current_road.locator[0].adjacent_roads(current_road.locator[1]) 
+                if road.owner is self]
+            if paths:
+                pass
+                # return sum(sorted(path for path in recurse_road_segment, reverse=True)[0:2])
+            else:
+                return current_length
 
-        return recurse_roads(self.roads[0], 0, 0) if len(self.roads) else 0
+        while remaining := [road for road in self.roads if road not in checked_roads]:
+            longest = max(longest, recurse_road_segment(remaining[0], 0))
+        return longest
 
 class Harbour:
     """A trading port that can be used for better deals"""
