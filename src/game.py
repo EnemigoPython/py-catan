@@ -96,9 +96,13 @@ class Player:
     def check_longest_road(self):
         checked_roads: List[Road] = []
 
-        def recurse_roads(current: int, longest: int):
+        def recurse_roads(current_road: Road, current_length: int, longest: int):
+            current_length += 1
+            paths = [road for road in Tile.adjacent_roads(current_road.locator[1])]
             if all(road in checked_roads for road in self.roads):
                 return longest
+
+        return recurse_roads(self.roads[0], 0, 0) if len(self.roads) else 0
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -222,8 +226,8 @@ class Road(Construction):
 
     def __init__(self, owner: Player, tile: Tile, slot_idx: int):
         assert 0 <= slot_idx < 6 and tile.road_slots[slot_idx] is None
-        self.tile = tile
-        self.tile.road_slots[slot_idx] = self
+        self.locator = (tile, slot_idx)
+        tile.road_slots[slot_idx] = self
         super().__init__("Road", owner)
         self.owner.occupied_tiles.add(tile)
         opposite_tile = tile.neighbours[slot_idx]
