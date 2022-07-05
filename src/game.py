@@ -97,14 +97,15 @@ class Player:
         longest = 0
         checked_roads: List[Road] = []
 
-        def recurse_road_segment(current_road: Road, current_length: int):
+        def recurse_road_segment(current_road: Road, current_length: int) -> int:
             current_length += 1
             checked_roads.append(current_road)
             paths = [road for road in current_road.locator[0].adjacent_roads(current_road.locator[1]) 
-                if road.owner is self]
-            if paths:
-                pass
-                # return sum(sorted(path for path in recurse_road_segment, reverse=True)[0:2])
+                if road.owner is self and road not in checked_roads]
+            if len(paths) == 1:
+                return recurse_road_segment(paths[0], current_length)
+            elif len(paths) > 1:
+                return sum(sorted((recurse_road_segment(path, current_length) for path in paths), reverse=True)[0:2])
             else:
                 return current_length
 
