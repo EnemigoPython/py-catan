@@ -236,7 +236,8 @@ class Road(Construction):
     """A road to put your wagon on"""
 
     def __init__(self, owner: Player, tile: Tile, slot_idx: int):
-        assert 0 <= slot_idx < 6 and tile.road_slots[slot_idx] is None
+        assert 0 <= slot_idx < 6
+        assert tile.road_slots[slot_idx] is None
         self.locator = (tile, slot_idx)
         tile.road_slots[slot_idx] = self
         super().__init__("Road", owner)
@@ -251,7 +252,8 @@ class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
 
     def __init__(self, owner: Player, tile: Tile, slot_idx: int):
-        assert 0 <= slot_idx < 6 and tile.construction_slots[slot_idx] is None
+        assert 0 <= slot_idx < 6
+        assert tile.construction_slots[slot_idx] is None
         self.tiles = [tile] + tile.vertex_neighbours(slot_idx)
         for tile, idx in Tile.slot_idx_gen(self.tiles, slot_idx):
             if tile is not None:
@@ -485,7 +487,7 @@ class Game:
         actor_idx = self.players.index(self.current_actor)
 
 game = Game()
-game.board.init_player_position(game.players[0], [], [(0, 0, 0), (0, 0, 1), (0, 0, 2)])
+game.board.init_player_position(game.players[0], [], [(0, 0, 0), (0, 0, 1), (1, 0, 5), (0, 0, 2), (0, 0, 3), (0, 0, 4), (2, 1, 5)])
 # breakpoint()
 print(game.players[0].longest_road)
 # print(game.players[1].longest_road)
