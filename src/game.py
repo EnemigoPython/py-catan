@@ -93,7 +93,8 @@ class Player:
     def collect_resources(self, number: int):
         self.resources.extend(tile.resource for tile in self.controlled_tiles if tile.check_proc(number))
 
-    def check_longest_road(self):
+    @property
+    def longest_road(self):
         longest = 0
         checked_roads: List[Road] = []
 
@@ -105,12 +106,13 @@ class Player:
             if len(paths) == 1:
                 return recurse_road_segment(paths[0], current_length)
             elif len(paths) > 1:
-                return sum(sorted((recurse_road_segment(path, current_length) for path in paths), reverse=True)[0:2])
+                return sum(sorted((recurse_road_segment(path, current_length) for path in paths), reverse=True)[0:2]) - 1
             else:
                 return current_length
 
         while remaining := [road for road in self.roads if road not in checked_roads]:
-            longest = max(longest, recurse_road_segment(remaining[0], 0))
+            current = recurse_road_segment(remaining[0], 0)
+            longest = max(longest, current)
         return longest
 
 class Harbour:
@@ -482,3 +484,8 @@ class Game:
 
         actor_idx = self.players.index(self.current_actor)
 
+game = Game()
+game.board.init_player_position(game.players[0], [], [(0, 0, 0), (0, 0, 1), (0, 0, 2)])
+# breakpoint()
+print(game.players[0].longest_road)
+# print(game.players[1].longest_road)
