@@ -301,6 +301,24 @@ class TestClass:
         except AssertionError as e:
             assert e.args[0] == 1
 
+    def test_longest_road(self):
+        players = [Player("Alice"), Player("Bob"), Player("Charlie")]
+        board = Board()
+        for _ in range(7):
+            players[0].resources.extend([
+                Resource.Brick, 
+                Resource.Lumber, 
+            ])
+        board.init_player_position(players[0], [(0, 1, 3)], [(0, 0, 0), (0, 0, 1)])
+        assert players[0].longest_road == 2
+        players[0].build("Road", board.tile_at(0, 1), 3)
+        assert players[0].longest_road == 2
+        players[0].build("Road", board.tile_at(0, 0), 2)
+        players[0].build("Road", board.tile_at(0, 0), 3)
+        assert players[0].longest_road == 4
+        players[0].build("Road", board.tile_at(1, 0), 3)
+        assert players[0].longest_road == 4
+
     def test_build_settlement_method(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
         board = Board()
