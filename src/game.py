@@ -103,15 +103,23 @@ class Player:
             checked_roads.append(current_road)
             paths = [road for road in current_road.locator[0].adjacent_roads(current_road.locator[1]) 
                 if road.owner is self and road not in checked_roads]
-            if len(paths) == 1:
+            if paths:
                 return recurse_road_segment(paths[0], current_length)
-            elif len(paths) > 1:
-                return sum(sorted((recurse_road_segment(path, current_length) for path in paths), reverse=True)[0:2]) - 1
             else:
                 return current_length
+            # if len(paths) == 1:
+            #     return recurse_road_segment(paths[0], current_length)
+            # elif len(paths) > 1:
+            #     return sum(sorted((recurse_road_segment(path, current_length) for path in paths), reverse=True)[0:2]) - 1
+            # else:
+            #     return current_length
 
         while remaining := [road for road in self.roads if road not in checked_roads]:
-            current = recurse_road_segment(remaining[0], 0)
+            # paths = [road for road in remaining[0].locator[0].adjacent_roads(remaining[0].locator[1]) 
+            #     if road.owner is self and road not in checked_roads]
+            current = sum(sorted((recurse_road_segment(path, 0) for path in remaining), reverse=True)[0:2]) - 1
+            # breakpoint()
+            # current = recurse_road_segment(remaining[0], 0)
             longest = max(longest, current)
         return longest
 
