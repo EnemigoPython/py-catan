@@ -94,17 +94,29 @@ class Player:
         self.resources.extend(tile.resource for tile in self.controlled_tiles if tile.check_proc(number))
 
     @property
+    # TODO: Fuck it maybe just burn this bit down and rewrite it soon
+    # I need to delistify the properties
     def longest_road(self):
+        print("***//")
         longest = 0
         checked_roads: List[Road] = []
 
         def recurse_road_segment(current_road: Road, current_length: int) -> int:
+            # print("*")
             current_length += 1
             checked_roads.append(current_road)
             paths = [road for road in current_road.locator[0].adjacent_roads(current_road.locator[1]) 
                 if road.owner is self and road not in checked_roads]
+            print(current_road, paths, current_length)
+            # print(checked_roads, "!" or "?")
             if paths:
-                return recurse_road_segment(paths[0], current_length)
+                longest = 0
+                for path in paths:
+                    if path not in checked_roads:
+                        current = recurse_road_segment(path, current_length)
+                        longest = max(current, longest)
+                return longest
+                # return max(recurse_road_segment(path, current_length) for path in paths if path not in checked_roads)
             else:
                 return current_length
             # if len(paths) == 1:
@@ -115,11 +127,20 @@ class Player:
             #     return current_length
 
         while remaining := [road for road in self.roads if road not in checked_roads]:
-            # paths = [road for road in remaining[0].locator[0].adjacent_roads(remaining[0].locator[1]) 
-            #     if road.owner is self and road not in checked_roads]
-            current = sum(sorted((recurse_road_segment(path, 0) for path in remaining), reverse=True)[0:2]) - 1
-            # breakpoint()
-            # current = recurse_road_segment(remaining[0], 0)
+            paths = [road for road in remaining[0].locator[0].adjacent_roads(remaining[0].locator[1]) 
+                if road.owner is self and road not in checked_roads]
+            checked_roads.append(remaining[0])
+            print(remaining[0], paths)
+            # current = sorted(recurse_road_segment(remaining[0], 0), reverse=True)[0:2] - 1
+            if not paths:
+                longest = longest or 1
+                checked_roads.append(remaining[0])
+                continue
+            # _current = sorted((recurse_road_segment(path, 0) for path in paths), reverse=True)[0:2]
+            current = sum(sorted((recurse_road_segment(path, 1) for path in paths), reverse=True)[0:2])
+            # print(_current, sum(_current))
+            # # breakpoint()
+            # # current = recurse_road_segment(remaining[0], 0)
             longest = max(longest, current)
         return longest
 
@@ -255,6 +276,9 @@ class Road(Construction):
             inverted_slot_idx = (slot_idx + 3) % 6
             opposite_tile.road_slots[inverted_slot_idx] = self
             self.owner.occupied_tiles.add(opposite_tile)
+
+    def __repr__(self):
+        return f"{super().__repr__()} at {self.locator}"
 
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
@@ -494,8 +518,10 @@ class Game:
 
         actor_idx = self.players.index(self.current_actor)
 
-game = Game()
-game.board.init_player_position(game.players[0], [], [(0, 0, 0), (0, 0, 1), (1, 0, 5), (0, 0, 2), (0, 0, 3), (0, 0, 4), (2, 1, 5)])
-# breakpoint()
-print(game.players[0].longest_road)
+# game = Game()
+# game.board.init_player_position(game.players[0], [], [(0, 0, 0), (0, 0, 1), (1, 0, 5), (0, 0, 2), (0, 0, 3), (0, 0, 4), (2, 1, 5)])
+# # breakpoint()
+# print(game.players[0].longest_road)
 # print(game.players[1].longest_road)
+x = [3]
+print(sum(x[0:2]))

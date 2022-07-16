@@ -315,6 +315,7 @@ class TestClass:
         assert players[0].longest_road == 2
         players[0].build("Road", board.tile_at(0, 0), 2)
         players[0].build("Road", board.tile_at(0, 0), 3)
+        print(board.tile_at(0, 0).adjacent_roads)
         assert players[0].longest_road == 4
         players[0].build("Road", board.tile_at(1, 0), 3)
         assert players[0].longest_road == 4
