@@ -32,20 +32,19 @@ class Player:
     @property
     def constructions(self):
         """Find all constructions made by the player"""
-        # cast to a set to eliminate duplicate references, then back to a list for indexing
-        return list(set(item for tile in self.controlled_tiles for item in tile.construction_slots 
-            if item is not None and item.owner is self))
+        return set(item for tile in self.controlled_tiles for item in tile.construction_slots 
+            if item is not None and item.owner is self)
 
     @property
     def roads(self):
-        return list(set(item for tile in self.occupied_tiles for item in tile.road_slots 
-            if item is not None and item.owner is self))
+        return set(item for tile in self.occupied_tiles for item in tile.road_slots 
+            if item is not None and item.owner is self)
 
     @property
     def harbours(self):
-        return list(set(harbour for tile in self.controlled_tiles for harbour in tile.harbour_slots
+        return set(harbour for tile in self.controlled_tiles for harbour in tile.harbour_slots
             if harbour is not None and tile.construction_slots[tile.harbour_slots.index(harbour)]
-            in self.constructions))
+            in self.constructions)
 
     def __repr__(self):
         return self.name
@@ -94,55 +93,11 @@ class Player:
         self.resources.extend(tile.resource for tile in self.controlled_tiles if tile.check_proc(number))
 
     @property
-    # TODO: Fuck it maybe just burn this bit down and rewrite it soon
-    # I need to delistify the properties
     def longest_road(self):
-        print("***//")
-        longest = 0
-        checked_roads: List[Road] = []
+        def recurse_path(checked_roads: List[Road], longest: int):
+            pass
 
-        def recurse_road_segment(current_road: Road, current_length: int) -> int:
-            # print("*")
-            current_length += 1
-            checked_roads.append(current_road)
-            paths = [road for road in current_road.locator[0].adjacent_roads(current_road.locator[1]) 
-                if road.owner is self and road not in checked_roads]
-            print(current_road, paths, current_length)
-            # print(checked_roads, "!" or "?")
-            if paths:
-                longest = 0
-                for path in paths:
-                    if path not in checked_roads:
-                        current = recurse_road_segment(path, current_length)
-                        longest = max(current, longest)
-                return longest
-                # return max(recurse_road_segment(path, current_length) for path in paths if path not in checked_roads)
-            else:
-                return current_length
-            # if len(paths) == 1:
-            #     return recurse_road_segment(paths[0], current_length)
-            # elif len(paths) > 1:
-            #     return sum(sorted((recurse_road_segment(path, current_length) for path in paths), reverse=True)[0:2]) - 1
-            # else:
-            #     return current_length
-
-        while remaining := [road for road in self.roads if road not in checked_roads]:
-            paths = [road for road in remaining[0].locator[0].adjacent_roads(remaining[0].locator[1]) 
-                if road.owner is self and road not in checked_roads]
-            checked_roads.append(remaining[0])
-            print(remaining[0], paths)
-            # current = sorted(recurse_road_segment(remaining[0], 0), reverse=True)[0:2] - 1
-            if not paths:
-                longest = longest or 1
-                checked_roads.append(remaining[0])
-                continue
-            # _current = sorted((recurse_road_segment(path, 0) for path in paths), reverse=True)[0:2]
-            current = sum(sorted((recurse_road_segment(path, 1) for path in paths), reverse=True)[0:2])
-            # print(_current, sum(_current))
-            # # breakpoint()
-            # # current = recurse_road_segment(remaining[0], 0)
-            longest = max(longest, current)
-        return longest
+        initial_road = choice(self.roads)
 
 class Harbour:
     """A trading port that can be used for better deals"""
