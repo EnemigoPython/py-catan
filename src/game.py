@@ -94,10 +94,28 @@ class Player:
 
     @property
     def longest_road(self):
-        def recurse_path(checked_roads: List[Road], longest: int):
-            pass
-
-        initial_road = choice(self.roads)
+        def recurse_path(current_road: Road, checked_roads: List[Road], current_length: int):
+            checked_roads.append(current_road)
+            available_roads = [road for road in current_road.adjacent_roads if road not in checked_roads]
+            if available_roads:
+                return max(recurse_path(path, checked_roads, current_length+1) for path in available_roads)
+            else:
+                return current_length, checked_roads
+        
+        if not self.roads:
+            return 0
+        checked_roads = []
+        longest = 1
+        while remaining := [road for road in self.roads if road not in checked_roads]:
+            starting_road = remaining[0]
+            checked_roads.append(starting_road)
+            path_lengths = []
+            for path in starting_road.adjacent_roads:
+                path_length, checked_roads = recurse_path(path, checked_roads, 2)
+                path_lengths.append(path_length)
+            total = sum(sorted(path_lengths, reverse=True)[0:2]) - (1 if len(path_lengths) > 1 else 0)
+            longest = max(longest, total)
+        return longest
 
 class Harbour:
     """A trading port that can be used for better deals"""
@@ -234,6 +252,10 @@ class Road(Construction):
 
     def __repr__(self):
         return f"{super().__repr__()} at {self.locator}"
+
+    @property
+    def adjacent_roads(self):
+        return self.locator[0].adjacent_roads(self.locator[1])
 
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
