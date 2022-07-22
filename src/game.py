@@ -111,8 +111,9 @@ class Player:
             checked_roads.append(starting_road)
             path_lengths = []
             for path in starting_road.adjacent_roads:
-                path_length, checked_roads = recurse_path(path, checked_roads, 2)
-                path_lengths.append(path_length)
+                if path not in checked_roads:
+                    path_length, checked_roads = recurse_path(path, checked_roads, 2)
+                    path_lengths.append(path_length)
             total = sum(sorted(path_lengths, reverse=True)[0:2]) - (1 if len(path_lengths) > 1 else 0)
             longest = max(longest, total)
         return longest
