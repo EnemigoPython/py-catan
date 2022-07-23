@@ -184,15 +184,16 @@ class Tile:
         """
         roads = [road for road in (self.road_slots[edge_idx-1], self.road_slots[(edge_idx+1)%6]) if road is not None]
         for e, tile in enumerate(self.edge_neighbours(edge_idx), 1):
-            if tile is not None:
-                if e < 3:
-                    road_slot = tile.road_slots[(edge_idx+e)%6]
-                    if road_slot is not None and road_slot not in roads:
-                        roads.append(road_slot)
-                if e > 1:
-                    road_slot = tile.road_slots[(edge_idx+e+2)%6]
-                    if road_slot is not None and road_slot not in roads:
-                        roads.append(road_slot)
+            if tile is None:
+                continue
+            if e < 3:
+                road_slot = tile.road_slots[(edge_idx+e)%6]
+                if road_slot is not None and road_slot not in roads:
+                    roads.append(road_slot)
+            if e > 1:
+                road_slot = tile.road_slots[(edge_idx+e+2)%6]
+                if road_slot is not None and road_slot not in roads:
+                    roads.append(road_slot)
         return roads
 
     def adjacent_settlements(self, vertex_idx: int) -> List[SettlementOrCity]:
@@ -200,8 +201,13 @@ class Tile:
         Return a list of all Settlements (or Cities) adjacent to a tile vertex
         """
         intersection = [self] + self.vertex_neighbours(vertex_idx)
-        return [tile.construction_slots[idx-1] for (tile, idx) in self.slot_idx_gen(intersection, vertex_idx)
-            if tile is not None and tile.construction_slots[idx-1] is not None]
+        settlements = []
+        for tile, idx in self.slot_idx_gen(intersection, vertex_idx):
+            if tile is None:
+                continue
+            construction_slots = tile.construction_slots[idx-1], tile.construction_slots[(idx+1)%6]
+            settlements.extend(slot for slot in construction_slots if slot is not None and slot not in settlements)
+        return settlements
 
     def check_proc(self, number: int):
         return number == self.number and not self.has_robber

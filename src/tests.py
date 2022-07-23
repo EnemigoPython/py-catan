@@ -270,17 +270,19 @@ class TestClass:
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
         board = Board()
         board.init_player_position(players[0], [(1, 1, 4), (0, 0, 2)], [])
-        assert len(board.tile_at(0, 1).adjacent_settlements(1)) == 2
+        assert len(board.tile_at(0, 0).adjacent_settlements(3)) == 2
         assert len(board.tile_at(1, 0).adjacent_settlements(3)) == 1
         assert len(board.tile_at(1, 1).adjacent_settlements(2)) == 0
         board.init_player_position(players[1], [(1, 2, 2)], [])
         assert len(board.tile_at(1, 2).adjacent_settlements(1)) == 2
         adjacent_settlements = [str(s) for s in board.tile_at(1, 2).adjacent_settlements(1)]
         assert all(s in adjacent_settlements for s in ("Alice's Settlement", "Bob's Settlement"))
-        board.init_player_position(players[2], [(1, 1, 2)], [])
+        board.init_player_position(players[2], [(1, 1, 2), (4, 2, 1)], [])
         assert len(board.tile_at(1, 2).adjacent_settlements(1)) == 3
         adjacent_settlements = set(str(s) for s in board.tile_at(1, 2).adjacent_settlements(1))
         assert len(adjacent_settlements) == 3
+        assert len(board.tile_at(4, 2).adjacent_settlements(2)) == 1
+        assert len(board.tile_at(4, 2).adjacent_settlements(0)) == 1
 
     def test_build_road_method(self):
         players = [Player("Alice"), Player("Bob")]
