@@ -243,20 +243,28 @@ class TestClass:
     def test_adjacent_roads_detection(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
         board = Board()
-        board.init_player_position(players[0], [], [(1, 1, 5)])
+        board.init_player_position(players[0], [], [(1, 1, 5), (2, 0, 1), (3, 1, 0)])
         assert len(board.tile_at(1, 1).adjacent_roads(4)) == 1
         assert len(board.tile_at(1, 1).adjacent_roads(5)) == 0
         assert len(board.tile_at(1, 0).adjacent_roads(4)) == 1
         assert len(board.tile_at(1, 0).adjacent_roads(3)) == 1
         assert len(board.tile_at(0, 1).adjacent_roads(0)) == 1
         assert len(board.tile_at(0, 0).adjacent_roads(3)) == 1
+        roads = board.tile_at(2, 0).adjacent_roads(1)[0], board.tile_at(3, 1).adjacent_roads(0)[0]
+        assert str(roads[0]) == "Alice's Road at (Hills (10), 0)"
+        assert str(roads[1]) == "Alice's Road at (Forest (9), 1)"
         board.init_player_position(players[1], [], [(2, 2, 5), (2, 1, 3)])
         assert len(board.tile_at(2, 2).adjacent_roads(5)) == 1
         assert len(board.tile_at(1, 1).adjacent_roads(2)) == 1
         assert len(board.tile_at(2, 1).adjacent_roads(4)) == 2
-        board.init_player_position(players[2], [], [(1, 3, 0), (2, 3, 5), (1, 3, 2), (2, 3, 3), (2, 3, 4)])
+        board.init_player_position(players[2], [], [(1, 3, 0), (2, 3, 5), (1, 3, 2), (2, 3, 3), (2, 3, 4), (4, 2, 2)])
         assert len(board.tile_at(1, 3).adjacent_roads(1)) == 4
         assert len(board.tile_at(1, 3).adjacent_roads(2)) == 2
+        road_slot = board.tile_at(3, 3).road_slots[1]
+        assert road_slot is None
+        assert len(board.tile_at(3, 3).adjacent_roads(1)) == 1
+        road = board.tile_at(3, 3).adjacent_roads(1)[0]
+        assert str(road) == "Charlie's Road at (Mountains (8), 2)"
 
     def test_adjacent_settlements_detection(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
@@ -319,6 +327,20 @@ class TestClass:
         assert players[0].longest_road == 4
         players[0].build("Road", board.tile_at(1, 0), 3)
         assert players[0].longest_road == 4
+        board.init_player_position(players[1], [], [
+            (2, 0, 0), 
+            (2, 0, 1), 
+            (3, 1, 0), 
+            (3, 1, 1), 
+            (4, 2, 0), 
+            (4, 2, 1), 
+            (4, 2, 2),
+            (3, 3, 1),
+            (3, 3, 2),
+            (2, 4, 1),
+            (2, 4, 2)
+        ])
+        assert players[1].longest_road == 11
 
     def test_build_settlement_method(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]

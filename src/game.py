@@ -112,6 +112,7 @@ class Player:
             path_lengths = []
             for path in starting_road.adjacent_roads:
                 if path not in checked_roads:
+                    # if str(starting_road.owner) == 'Bob': breakpoint()
                     path_length, checked_roads = recurse_path(path, checked_roads, 2)
                     path_lengths.append(path_length)
             total = sum(sorted(path_lengths, reverse=True)[0:2]) - (1 if len(path_lengths) > 1 else 0)
@@ -168,15 +169,31 @@ class Tile:
             return self.neighbours[6::-5]
         return self.neighbours[vertex_idx-1:vertex_idx+1]
 
+    def edge_neighbours(self, edge_idx: int):
+        """
+        Determine, given an edge of the tile, what other tiles are intersected.
+        Returned clockwise, includes Nonetype values
+        """
+        if edge_idx == 0:
+            return [self.neighbours[-1], self.neighbours[0], self.neighbours[1]]
+        return self.neighbours[edge_idx-1:edge_idx+2]
+
     def adjacent_roads(self, edge_idx: int) -> List[Road]:
         """
         Return a list of all Roads adjacent to a tile edge
         """
-        roads = [self.road_slots[edge_idx-1], self.road_slots[(edge_idx+1)%6]]
-        for e, tile in enumerate(self.vertex_neighbours(edge_idx), 1):
+        roads = [road for road in (self.road_slots[edge_idx-1], self.road_slots[(edge_idx+1)%6]) if road is not None]
+        for e, tile in enumerate(self.edge_neighbours(edge_idx), 1):
             if tile is not None:
-                roads.append(tile.road_slots[(edge_idx+e)%6])
-        return [road for road in roads if road is not None]
+                if e < 3:
+                    road_slot = tile.road_slots[(edge_idx+e)%6]
+                    if road_slot is not None and road_slot not in roads:
+                        roads.append(road_slot)
+                if e > 1:
+                    road_slot = tile.road_slots[(edge_idx+e+2)%6]
+                    if road_slot is not None and road_slot not in roads:
+                        roads.append(road_slot)
+        return roads
 
     def adjacent_settlements(self, vertex_idx: int) -> List[SettlementOrCity]:
         """
@@ -496,10 +513,9 @@ class Game:
 
         actor_idx = self.players.index(self.current_actor)
 
-# game = Game()
-# game.board.init_player_position(game.players[0], [], [(0, 0, 0), (0, 0, 1), (1, 0, 5), (0, 0, 2), (0, 0, 3), (0, 0, 4), (2, 1, 5)])
-# # breakpoint()
-# print(game.players[0].longest_road)
-# print(game.players[1].longest_road)
-x = [3]
-print(sum(x[0:2]))
+# board = Board()
+# board.init_player_position(Player(), [], [(2, 0, 1), (3, 1, 0)])
+# road1 = board.tile_at(2, 0).adjacent_roads(1)
+# print(road1[0])
+# road2 = board.tile_at(3, 1).adjacent_roads(0)
+# print(road1, road2)
