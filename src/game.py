@@ -96,6 +96,7 @@ class Player:
     def longest_road(self):
         def recurse_path(current_road: Road, checked_roads: List[Road], forbidden_roads: List[Road], current_length: int):
             checked_roads.append(current_road)
+            # forbidden roads are roads that the last road could see, which means they are behind us
             available_roads = [road for road in current_road.adjacent_roads if road not in checked_roads 
                 and road not in forbidden_roads]
             if available_roads:
@@ -107,7 +108,7 @@ class Player:
             return 0
         checked_roads = []
         longest = 1
-        # keep checking until there are no roads to visit, this ensures every path is visited once
+        # keep checking until there are no roads to visit: this ensures every path is visited once
         while remaining := [road for road in self.roads if road not in checked_roads]:
             starting_road = remaining[0]
             checked_roads.append(starting_road)
@@ -125,7 +126,7 @@ class Player:
             get_road = [r for r in starting_road.adjacent_roads if str(r) == longest_paths[0][0]][0]
             if len(longest_paths) > 1:
                 get_second_road = [r for r in starting_road.adjacent_roads if str(r) == longest_paths[1][0]][0]
-                # If the first road can see the second road, the starting road is sticking out in a fork (not to be included)
+                # if the first road can see the second road, then the starting road is sticking out in a fork (not to be included)
                 if get_second_road in get_road.adjacent_roads:
                     total -= 1
             longest = max(longest, total)
@@ -520,7 +521,7 @@ class Game:
         return randint(1, 6) + randint(1, 6)
 
     def check_largest_army(self):
-        to_beat = self.largest_army.victory_points if self.largest_army is not None else 2
+        to_beat = self.largest_army.army_count if self.largest_army is not None else 2
         if self.current_actor.army_count > to_beat:
             if self.largest_army is not None:
                 self.largest_army.victory_points -= 2
@@ -528,8 +529,12 @@ class Game:
             self.largest_army = self.current_actor
 
     def check_longest_road(self):
-        # to_beat = 
-        pass
+        to_beat = self.longest_road.longest_road if self.longest_road is not None else 2
+        if self.current_actor.longest_road > to_beat:
+            if self.longest_road is not None:
+                self.longest_road.victory_points -= 2
+            self.current_actor.victory_points += 2
+            self.longest_road = self.current_actor
 
     def next_turn(self):
 
