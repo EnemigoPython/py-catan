@@ -315,7 +315,7 @@ class TestClass:
     def test_longest_road(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
         board = Board()
-        for _ in range(7):
+        for _ in range(6):
             players[0].resources.extend([
                 Resource.Brick, 
                 Resource.Lumber, 
@@ -329,6 +329,10 @@ class TestClass:
         assert players[0].longest_road == 4
         players[0].build("Road", board.tile_at(1, 0), 3)
         assert players[0].longest_road == 4
+        players[0].build("Road", board.tile_at(2, 1), 4)
+        assert players[0].longest_road == 4
+        players[0].build("Road", board.tile_at(2, 1), 3)
+        assert players[0].longest_road == 5
         board.init_player_position(players[1], [], [
             (2, 0, 0), 
             (2, 0, 1), 
@@ -343,6 +347,16 @@ class TestClass:
             (2, 4, 2)
         ])
         assert players[1].longest_road == 11
+        for _ in range(3):
+            players[1].resources.extend([
+                Resource.Brick, 
+                Resource.Lumber, 
+            ])
+        players[1].build("Road", board.tile_at(3, 1), 2)
+        # TODO: this fails because `available_roads` should only include the side of adjacent roads opposite to path entry
+        assert players[1].longest_road == 11
+        players[1].build("Road", board.tile_at(2, 4), 3)
+        assert players[1].longest_road == 12
 
     def test_build_settlement_method(self):
         players = [Player("Alice"), Player("Bob"), Player("Charlie")]
@@ -424,3 +438,5 @@ class TestClass:
         game.players[1].victory_points = 5
         game.players[3].victory_points = 3
         assert str(game) == "Bob: 5, Dennis: 3, Alice: 0, Charlie: 0"
+
+TestClass().test_longest_road()

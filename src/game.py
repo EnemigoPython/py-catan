@@ -94,11 +94,12 @@ class Player:
 
     @property
     def longest_road(self):
-        def recurse_path(current_road: Road, checked_roads: List[Road], current_length: int):
+        def recurse_path(current_road: Road, checked_roads: List[Road], forbidden_roads: List[Road], current_length: int):
             checked_roads.append(current_road)
-            available_roads = [road for road in current_road.adjacent_roads if road not in checked_roads]
+            available_roads = [road for road in current_road.adjacent_roads if road not in checked_roads 
+                and road not in forbidden_roads]
             if available_roads:
-                return max(recurse_path(path, checked_roads, current_length+1) for path in available_roads)
+                return max(recurse_path(path, checked_roads, available_roads, current_length+1) for path in available_roads)
             else:
                 return current_length, checked_roads
         
@@ -106,16 +107,27 @@ class Player:
             return 0
         checked_roads = []
         longest = 1
+        # keep checking until there are no roads to visit, this ensures every path is visited once
         while remaining := [road for road in self.roads if road not in checked_roads]:
             starting_road = remaining[0]
             checked_roads.append(starting_road)
-            path_lengths = []
+            path_res = {}
             for path in starting_road.adjacent_roads:
+                # we might have visited the road during iteration
                 if path not in checked_roads:
-                    # if str(starting_road.owner) == 'Bob': breakpoint()
-                    path_length, checked_roads = recurse_path(path, checked_roads, 2)
-                    path_lengths.append(path_length)
-            total = sum(sorted(path_lengths, reverse=True)[0:2]) - (1 if len(path_lengths) > 1 else 0)
+                    path_length, checked_roads = recurse_path(path, checked_roads, starting_road.adjacent_roads, 2)
+                    path_res[str(path)] = path_length
+            if not path_res:
+                continue
+            longest_paths = sorted(path_res.items(), key=lambda x: x[1], reverse=True)[0:2]
+            # if the starting road isn't at an edge, it gets counted twice so this needs to be adjusted for
+            total = sum(i[1] for i in longest_paths) - (len(longest_paths) - 1)
+            get_road = [r for r in starting_road.adjacent_roads if str(r) == longest_paths[0][0]][0]
+            if len(longest_paths) > 1:
+                get_second_road = [r for r in starting_road.adjacent_roads if str(r) == longest_paths[1][0]][0]
+                # If the first road can see the second road, the starting road is sticking out in a fork (not to be included)
+                if get_second_road in get_road.adjacent_roads:
+                    total -= 1
             longest = max(longest, total)
         return longest
 
@@ -280,6 +292,10 @@ class Road(Construction):
     @property
     def adjacent_roads(self):
         return self.locator[0].adjacent_roads(self.locator[1])
+
+    def road_is(self, road: Road):
+        """
+        """
 
 class SettlementOrCity(Construction):
     """Hybrid class for settlements/cities"""
