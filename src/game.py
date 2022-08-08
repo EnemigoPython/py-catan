@@ -390,9 +390,8 @@ class DevelopmentCard(Construction):
 
 class Board:
     """The board represents the 2d playing space of Catan"""
-    def __init__(self, config: dict | None = None):
-        _config = config or {}
-        harbours = _config.get("harbours") or [
+    def __init__(self, **kwargs):
+        harbours = kwargs.get("harbours") or [
             Harbour(),
             Harbour(Resource.Grain),
             Harbour(Resource.Ore),
@@ -403,7 +402,7 @@ class Board:
             Harbour(),
             Harbour()
         ]
-        self.tiles: List[List[Tile]] = _config.get("Tiles") or [
+        self.tiles: List[List[Tile]] = kwargs.get("Tiles") or [
             [
                 Tile("Mountains", 10, harbours=[(harbours[0], 0), (harbours[0], 5)]),
                 Tile("Pasture", 2, harbours=[(harbours[1], 0), (harbours[1], 1)]),
@@ -500,15 +499,14 @@ class Game:
         "Elaine"
     ]
     
-    def __init__(self, config: dict | None = None):
+    def __init__(self, **kwargs):
         self.round = 1
-        self.config = config or {}
-        self.board = Board(self.config.get("board"))
-        number_of_players = self.config.get("player_number") or 4
-        player_names = self.config.get("player_names") or self.default_names
+        self.board = Board(board=kwargs.get("board"))
+        number_of_players = kwargs.get("player_number", 4)
+        player_names = kwargs.get("player_names", self.default_names)
         self.players = [Player(player_names[name]) for name in range(number_of_players)]
         self.current_actor = self.players[0]
-        self.development_cards = self.config.get("development_cards") or DevelopmentCard.default_card_stack()
+        self.development_cards = kwargs.get("development_cards", DevelopmentCard.default_card_stack())
         self.player_with_largest_army: Player | None = None
         self.player_with_longest_road: Player | None = None
 
@@ -548,10 +546,10 @@ class Game:
         """
         return False if self.current_actor.victory_points < 10 else self.current_actor
 
-    def game_wrapper(self, fn_decision: Callable):
+    def game_wrapper(self, option: Callable):
         """
         This wrapper function is called to create a game loop and handle internal state.
-        `fn_decision`: a function to be called on the Player inherited instances in `self.players` created by `__init__`.
+        `option`: a function to be called on the Player inherited instances in `self.players` created by `__init__`.
         For example, the AI will insert controller code in here to play its turn, but an input can also be retrieved from a human.
         """
         pass
