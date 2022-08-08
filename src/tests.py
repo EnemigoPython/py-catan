@@ -438,5 +438,3 @@ class TestClass:
         game.players[1].victory_points = 5
         game.players[3].victory_points = 3
         assert str(game) == "Bob: 5, Dennis: 3, Alice: 0, Charlie: 0"
-
-TestClass().test_longest_road()

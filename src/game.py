@@ -1,7 +1,7 @@
 """This file contains all game logic components as a library"""
 from __future__ import annotations
 from enum import Enum, auto
-from typing import List, Set, Dict, Tuple, Generator
+from typing import List, Set, Dict, Tuple, Generator, Callable
 from random import choice, sample, randint
 
 class Resource(Enum):
@@ -509,8 +509,8 @@ class Game:
         self.players = [Player(player_names[name]) for name in range(number_of_players)]
         self.current_actor = self.players[0]
         self.development_cards = self.config.get("development_cards") or DevelopmentCard.default_card_stack()
-        self.largest_army: Player | None = None
-        self.longest_road: Player | None = None
+        self.player_with_largest_army: Player | None = None
+        self.player_with_longest_road: Player | None = None
 
     def __repr__(self):
         sorted_players = sorted(self.players, key=lambda x: x.victory_points, reverse=True)
@@ -521,28 +521,37 @@ class Game:
         return randint(1, 6) + randint(1, 6)
 
     def check_largest_army(self):
-        to_beat = self.largest_army.army_count if self.largest_army is not None else 2
+        to_beat = self.player_with_largest_army.army_count if self.player_with_largest_army is not None else 2
         if self.current_actor.army_count > to_beat:
-            if self.largest_army is not None:
-                self.largest_army.victory_points -= 2
+            if self.player_with_largest_army is not None:
+                self.player_with_largest_army.victory_points -= 2
             self.current_actor.victory_points += 2
-            self.largest_army = self.current_actor
+            self.player_with_largest_army = self.current_actor
 
     def check_longest_road(self):
-        to_beat = self.longest_road.longest_road if self.longest_road is not None else 2
+        to_beat = self.player_with_longest_road.longest_road if self.player_with_longest_road is not None else 2
         if self.current_actor.longest_road > to_beat:
-            if self.longest_road is not None:
-                self.longest_road.victory_points -= 2
+            if self.player_with_longest_road is not None:
+                self.player_with_longest_road.victory_points -= 2
             self.current_actor.victory_points += 2
-            self.longest_road = self.current_actor
+            self.player_with_longest_road = self.current_actor
 
     def next_turn(self):
-
         actor_idx = self.players.index(self.current_actor)
+        self.current_actor = self.players[(actor_idx+1)%len(self.players)]
 
-# board = Board()
-# board.init_player_position(Player(), [], [(2, 0, 1), (3, 1, 0)])
-# road1 = board.tile_at(2, 0).adjacent_roads(1)
-# print(road1[0])
-# road2 = board.tile_at(3, 1).adjacent_roads(0)
-# print(road1, road2)
+    def is_winner(self) -> bool | Player:
+        """
+        If no winner, return False.
+        If there is a winner, return Player.
+        Use as a game loop like so: `while not (winner := game.is_winner()):`
+        """
+        return False if self.current_actor.victory_points < 10 else self.current_actor
+
+    def game_wrapper(self, fn_decision: Callable):
+        """
+        This wrapper function is called to create a game loop and handle internal state.
+        `fn_decision`: a function to be called on the Player inherited instances in `self.players` created by `__init__`.
+        For example, the AI will insert controller code in here to play its turn, but an input can also be retrieved from a human.
+        """
+        pass
