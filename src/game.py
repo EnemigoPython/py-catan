@@ -495,16 +495,13 @@ class Game:
         "Alice",
         "Bob",
         "Charlie",
-        "Dennis",
-        "Elaine"
+        "Dennis"
     ]
     
     def __init__(self, **kwargs):
         self.round = 1
         self.board = Board(board=kwargs.get("board"))
-        number_of_players = kwargs.get("player_number", 4)
-        player_names = kwargs.get("player_names", self.default_names)
-        self.players = [Player(player_names[name]) for name in range(number_of_players)]
+        self.players: List[Player] = kwargs.get("players", [Player(name) for name in self.default_names])
         self.current_actor = self.players[0]
         self.development_cards = kwargs.get("development_cards", DevelopmentCard.default_card_stack())
         self.player_with_largest_army: Player | None = None
@@ -517,6 +514,10 @@ class Game:
     @staticmethod
     def dice_roll():
         return randint(1, 6) + randint(1, 6)
+
+    def check_roll_result(self, r: int):
+        for player in self.players:
+            player.collect_resources(r)
 
     def check_largest_army(self):
         to_beat = self.player_with_largest_army.army_count if self.player_with_largest_army is not None else 2
@@ -538,18 +539,27 @@ class Game:
         actor_idx = self.players.index(self.current_actor)
         self.current_actor = self.players[(actor_idx+1)%len(self.players)]
 
-    def is_winner(self) -> bool | Player:
+    def is_winner(self) -> bool:
         """
-        If no winner, return False.
-        If there is a winner, return Player.
-        Use as a game loop like so: `while not (winner := game.is_winner()):`
+        Return True if there is a winner.
+        Used as an exit clause for `game_wrapper`.
         """
-        return False if self.current_actor.victory_points < 10 else self.current_actor
+        return self.current_actor.victory_points >= 10
 
-    def game_wrapper(self, option: Callable):
+    def game_wrapper(self, option: Callable) -> Player:
         """
-        This wrapper function is called to create a game loop and handle internal state.
+        This wrapper function is called to create a game loop and handle internal game state.
         `option`: a function to be called on the Player inherited instances in `self.players` created by `__init__`.
         For example, the AI will insert controller code in here to play its turn, but an input can also be retrieved from a human.
+        Return value: the winner.
         """
-        pass
+        while True:
+            for player in self.players:
+                roll = Game.dice_roll()
+                self.check_roll_result(roll)
+                option(player)
+                self.check_largest_army()
+                self.check_longest_road()
+                if self.is_winner():
+                    return self.current_actor
+                self.next_turn()
